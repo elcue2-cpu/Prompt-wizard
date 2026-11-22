@@ -761,3 +761,13 @@ body.sheet-open{overflow:hidden}
   .rail-label{display:none}
   .rail-step{justify-content:center}
 }
+
+/* 좁은 화면: 상단바를 2줄로 — 브랜드/초기화 아래에 카테고리 가로 스크롤 */
+@media (max-width:560px){
+  .topbar-inner{flex-wrap:wrap;row-gap:7px;padding:10px 14px 8px}
+  .brand{order:1;flex:1 1 auto}
+  .reset-btn{order:2}
+  .catnav{order:3;flex:1 0 100%;width:100%;padding:0 0 2px}
+  .cat{padding:6px 9px;font-size:11px}
+  .cat-ic{font-size:12px}
+}

@@ -569,7 +569,7 @@ window.PW = window.PW || {};
       jobTasks(job).forEach(function (t) { if (t.id === remembered) ok = true; });
       state.task = ok ? remembered : null;
     }
-    if (state.step < 2) state.step = 2;
+    state.step = Math.max(state.step, 2);
     render();
     els.liveStatus.textContent = job.name + ' 직무가 선택되었습니다.';
   }
@@ -584,7 +584,7 @@ window.PW = window.PW || {};
     }
     state.task = id;
     state.lastTaskByJob[state.job] = id;
-    if (state.step < 3) state.step = 3;
+    state.step = Math.max(state.step, 3);
     render();
   }
 
