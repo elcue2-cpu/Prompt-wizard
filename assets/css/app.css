@@ -179,7 +179,7 @@ a{color:inherit;text-decoration:none}
    광고 자리 (enabled:false 이면 hidden — 빈 공간도 남기지 않음)
    ========================================================= */
 .ad-slot{max-width:1440px}
-.ad-slot--start{margin:0 0 2px}
+.ad-slot--start{margin:150px 0 2px}
 .ad-slot--end{margin:14px 0 150px;padding:0 14px}
 .ad-slot--main{margin:22px auto 0}
 .ad-dev{
@@ -549,7 +549,7 @@ body.sheet-open{overflow:hidden}
   .quality{display:none}
   body.sheet-open .quality{display:block}
   .ad-slot--end{display:none}
-  .ad-slot--start{margin-bottom:0}
+  .ad-slot--start{margin:24px 0 0}
   .quickstart{margin-bottom:14px}
   .qs-btn{padding:6px 9px}
   .qs-name{font-size:12px}
