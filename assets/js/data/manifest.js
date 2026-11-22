@@ -2,9 +2,11 @@
 window.PW = window.PW || {};
 (function (PW) {
   PW.manifest = [
+    'assets/js/data/categories.js',
     'assets/js/data/jobs-office.js',
     'assets/js/data/tasks-office.js',
     'assets/js/data/outputs-office.js',
+    'assets/js/data/options-office.js',
     'assets/js/data/guards.js',
     'assets/js/engine.js',
     'assets/js/editor.js',

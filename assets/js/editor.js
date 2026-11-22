@@ -276,8 +276,15 @@ window.PW = window.PW || {};
         shown[s.key] = cp;
         changed.push(s.key);
       } else {
-        shown[s.key] = target.length;
-        fromIdx[s.key] = target.length;
+        // 같은 내용이면 새로 쓰지 않는다. 아직 타이핑 중이던 문단은
+        // 진행 중인 글자 수와 하이라이트 시작점을 그대로 두어 애니메이션이 끊기지 않게 하고,
+        // 이미 다 쓴 문단은 하이라이트를 남기지 않는다.
+        if (shown[s.key] === undefined) {
+          shown[s.key] = target.length;
+          fromIdx[s.key] = target.length;
+        } else if (shown[s.key] >= target.length) {
+          fromIdx[s.key] = target.length;
+        }
       }
 
       segText[s.key] = target;

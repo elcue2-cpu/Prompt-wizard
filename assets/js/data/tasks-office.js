@@ -1,119 +1,106 @@
-/* Prompt Wizard — 세부 업무 21개 — TASK_FOCUS(프롬프트 문장) + TASK_NOTES(한 줄 조언) */
+/* Prompt Wizard — 공공기관·공무원 세부 업무 23개
+   기존 v3 키 21개는 key/quote/detailLabel/need를 그대로 보존하고(회귀 기준),
+   지시서 예시에만 있던 2개(장애 및 사이버침해 대응·IT 관련 감사 및 행정 대응)를 added:true로 더했다.
+   need는 v3 문장과 문자열 동일 — work/pw_check_v4.py가 해시로 대조한다. */
 window.PW = window.PW || {};
 (function (PW) {
   'use strict';
   PW.data = PW.data || {};
+  PW.data.tasks = [
+    { id: "plan", cat: 'public', jobId: "ops", key: "기획", label: "기획·계획 수립",
+      detailLabel: "기획", quote: "기획",
+      need: "중장기·상위계획과의 정합성, 추진 일정과 성과 목표를 먼저 밝혀야 합니다.",
+      recommends: ["report", "review"], order: 1, added: false },
+    { id: "budget", cat: 'public', jobId: "ops", key: "예산(편성·집행)", label: "예산 편성·집행",
+      detailLabel: "예산 편성·집행", quote: "예산(편성·집행)",
+      need: "편성 근거(전년도 집행률·단가)와 집행 시기, 재원 구분을 숫자로 제시해야 합니다.",
+      recommends: ["report", "review"], order: 2, added: false },
+    { id: "admin", cat: 'public', jobId: "ops", key: "서무", label: "문서·서무 관리",
+      detailLabel: "서무", quote: "서무",
+      need: "문서 접수·발송 경로와 보존 기간, 담당·연락처를 분명히 적어야 합니다.",
+      recommends: ["collab", "mail"], order: 3, added: false },
+    { id: "council", cat: 'public', jobId: "ops", key: "의회·감사 대응", label: "의회·감사 요구자료 대응",
+      detailLabel: "의회·감사 대응", quote: "의회·감사 대응",
+      need: "요구 항목별로 1:1 답변을 맞추고, 사실·수치·원인·개선대책 순서로 쓰되 요구 범위 밖 자료는 넣지 않아야 합니다.",
+      recommends: ["report", "review"], order: 4, added: false },
+    { id: "program", cat: 'public', jobId: "ops", key: "주요사업", label: "주요사업 추진·관리",
+      detailLabel: "주요사업", quote: "주요사업",
+      need: "사업 목적·범위·추진 체계와 부서별 역할을 구분해 써야 합니다.",
+      recommends: ["report", "summary"], order: 5, added: false },
+    { id: "bsc", cat: 'public', jobId: "ops", key: "BSC(성과지표)", label: "BSC 성과지표 관리",
+      detailLabel: "BSC(성과지표)", quote: "BSC(성과지표)",
+      need: "지표 정의·산식·측정 주기와 목표 대비 실적을 같은 기준으로 비교해야 합니다.",
+      recommends: ["report", "excel"], order: 6, added: false },
+    { id: "operation", cat: 'public', jobId: "ops", key: "운영총괄", label: "운영 총괄·절차 관리",
+      detailLabel: "운영총괄", quote: "운영총괄",
+      need: "운영 주체·절차·비상 대응 체계가 한눈에 보이게 정리해야 합니다.",
+      recommends: ["report", "summary"], order: 7, added: false },
+    { id: "complaint", cat: 'public', jobId: "ops", key: "민원 대응", label: "민원 접수·처리",
+      detailLabel: "민원 대응", quote: "민원 대응",
+      need: "민원 발생 경위·처리 결과·재발 방지 대책을 사실 위주로 써야 합니다.",
+      recommends: ["mail", "report"], order: 8, added: false },
 
-  PW.data.tasks = {
-    '기획': {
-      label: '기획',
-      need: '중장기·상위계획과의 정합성, 추진 일정과 성과 목표를 먼저 밝혀야 합니다.'
-    },
-    '예산(편성·집행)': {
-      label: '예산 편성·집행',
-      need: '편성 근거(전년도 집행률·단가)와 집행 시기, 재원 구분을 숫자로 제시해야 합니다.'
-    },
-    '서무': {
-      label: '서무',
-      need: '문서 접수·발송 경로와 보존 기간, 담당·연락처를 분명히 적어야 합니다.'
-    },
-    '의회·감사 대응': {
-      label: '의회·감사 대응',
-      need: '요구 항목별로 1:1 답변을 맞추고, 사실·수치·원인·개선대책 순서로 쓰되 요구 범위 밖 자료는 넣지 않아야 합니다.'
-    },
-    '주요사업': {
-      label: '주요사업',
-      need: '사업 목적·범위·추진 체계와 부서별 역할을 구분해 써야 합니다.'
-    },
-    'BSC(성과지표)': {
-      label: 'BSC(성과지표)',
-      need: '지표 정의·산식·측정 주기와 목표 대비 실적을 같은 기준으로 비교해야 합니다.'
-    },
-    '운영총괄': {
-      label: '운영총괄',
-      need: '운영 주체·절차·비상 대응 체계가 한눈에 보이게 정리해야 합니다.'
-    },
-    '민원 대응': {
-      label: '민원 대응',
-      need: '민원 발생 경위·처리 결과·재발 방지 대책을 사실 위주로 써야 합니다.'
-    },
-    '서비스 운영·기능도입 검토': {
-      label: '서비스 운영·기능도입 검토',
-      need: '현재 서비스 흐름, 도입 필요성, 자체 개발·용역·상용 대안 비교와 검토 의견을 제시해야 합니다.'
-    },
-    '외부연계(API·유관기관)': {
-      label: '외부 연계(API·유관기관)',
-      need: '연계 방식·데이터 항목·장애 책임 경계와 협약·계약 근거를 명시해야 합니다.'
-    },
-    '시스템 작업·패치이력 보고': {
-      label: '시스템 작업 및 패치 이력 보고(앱·홈페이지·보안점검)',
-      need: '작업 일시, 대상, 결과와 장애 여부를 시간순으로 빠짐없이 정리해야 합니다.'
-    },
-    '개인정보보호': {
-      label: '개인정보보호',
-      need: '수집·이용·보관·파기 흐름과 접근 권한, 위탁·제3자 제공 여부를 확인해 써야 합니다.'
-    },
-    '시스템 유지관리': {
-      label: '시스템 유지관리',
-      need: '유지관리 범위(상주·원격)와 장애 대응 시간, 처리 이력 근거를 붙여야 합니다.'
-    },
-    '용역·발주': {
-      label: '용역·발주',
-      need: '계약 방식과 근거, 방침·계약심사·일상감사 같은 사전 절차, 과업지시서·규격 변경 절차를 함께 밝혀야 합니다.'
-    },
-    '시설·장비 점검': {
-      label: '시설·장비 점검',
-      need: '점검 일시·대상·지적사항·조치 결과를 표로 정리하고 위험도 순으로 써야 합니다.'
-    },
-    '협력사·현장인력 관리': {
-      label: '협력사·현장인력 관리',
-      need: '지시 내용·이행 확인·인력 투입 현황을 사실로 기록하고 책임 주체를 구분해야 합니다.'
-    },
-    '안전·보건 조치': {
-      label: '안전·보건 조치',
-      need: '위험 요인과 조치 전후 상태, 근거 기준을 함께 적어야 합니다.'
-    },
-    '현장 민원 수습': {
-      label: '현장 민원 수습',
-      need: '민원 내용·현장 확인 결과·조치와 향후 대응 계획을 시간순으로 써야 합니다.'
-    },
-    '현장 작업 결과': {
-      label: '현장 작업 결과',
-      need: '작업 일시·장소·대상·소요 시간·수량을 사실 위주로 간결하게 적어야 합니다.'
-    },
-    '비품·수선 요청': {
-      label: '비품·수선 요청',
-      need: '필요 사유와 수량·규격, 긴급도, 미조치 시 영향을 함께 써야 합니다.'
-    },
-    '특이사항·안전 이상 보고': {
-      label: '특이사항·안전 이상 보고',
-      need: '발견 시각·상황·즉시 조치·추가 필요 조치를 순서대로 보고해야 합니다.'
-    }
-  };
+    { id: "service-review", cat: 'public', jobId: "it", key: "서비스 운영·기능도입 검토", label: "시스템 운영·기능 도입 검토",
+      detailLabel: "서비스 운영·기능도입 검토", quote: "서비스 운영·기능도입 검토",
+      need: "현재 서비스 흐름, 도입 필요성, 자체 개발·용역·상용 대안 비교와 검토 의견을 제시해야 합니다.",
+      recommends: ["report", "review"], order: 1, added: false },
+    { id: "integration", cat: 'public', jobId: "it", key: "외부연계(API·유관기관)", label: "외부 연계(API·유관기관)",
+      detailLabel: "외부 연계(API·유관기관)", quote: "외부연계(API·유관기관)",
+      need: "연계 방식·데이터 항목·장애 책임 경계와 협약·계약 근거를 명시해야 합니다.",
+      recommends: ["report", "collab"], order: 2, added: false },
+    { id: "patch-report", cat: 'public', jobId: "it", key: "시스템 작업·패치이력 보고", label: "시스템 작업·패치 이력 보고",
+      detailLabel: "시스템 작업 및 패치 이력 보고(앱·홈페이지·보안점검)", quote: "시스템 작업·패치이력 보고",
+      need: "작업 일시, 대상, 결과와 장애 여부를 시간순으로 빠짐없이 정리해야 합니다.",
+      recommends: ["report", "summary"], order: 3, added: false },
+    { id: "privacy", cat: 'public', jobId: "it", key: "개인정보보호", label: "개인정보·정보보안 관리",
+      detailLabel: "개인정보보호", quote: "개인정보보호",
+      need: "수집·이용·보관·파기 흐름과 접근 권한, 위탁·제3자 제공 여부를 확인해 써야 합니다.",
+      recommends: ["report", "review"], order: 4, added: false },
+    { id: "maintenance", cat: 'public', jobId: "it", key: "시스템 유지관리", label: "시스템 유지관리·장애 대응",
+      detailLabel: "시스템 유지관리", quote: "시스템 유지관리",
+      need: "유지관리 범위(상주·원격)와 장애 대응 시간, 처리 이력 근거를 붙여야 합니다.",
+      recommends: ["report", "collab"], order: 5, added: false },
+    { id: "procurement", cat: 'public', jobId: "it", key: "용역·발주", label: "용역·발주(계약) 관리",
+      detailLabel: "용역·발주", quote: "용역·발주",
+      need: "계약 방식과 근거, 방침·계약심사·일상감사 같은 사전 절차, 과업지시서·규격 변경 절차를 함께 밝혀야 합니다.",
+      recommends: ["report", "collab"], order: 6, added: false },
+    { id: "incident", cat: 'public', jobId: "it", key: null, label: "장애 및 사이버침해 대응",
+      detailLabel: "장애 및 사이버침해 대응", quote: "장애 및 사이버침해 대응",
+      need: "장애·침해 발생 시각과 영향 범위, 원인, 복구 시간, 재발 방지 대책을 시간순으로 정리해야 합니다.",
+      recommends: ["report", "review"], order: 7, added: true },
+    { id: "it-audit", cat: 'public', jobId: "it", key: null, label: "IT 관련 감사 및 행정 대응",
+      detailLabel: "IT 관련 감사 및 행정 대응", quote: "IT 관련 감사 및 행정 대응",
+      need: "감사 지적사항과 요구 자료를 항목별로 1:1로 맞추고, 조치 결과와 이행 기한을 근거와 함께 밝혀야 합니다.",
+      recommends: ["report", "collab"], order: 8, added: true },
 
-  PW.data.taskNotes = {
-    '기획': '중장기·상위계획과의 정합성, 추진 일정과 성과 목표를 먼저 밝히세요.',
-    '예산(편성·집행)': '편성 근거(전년도 집행률·단가)와 집행 시기, 재원 구분을 숫자로 제시하세요.',
-    '서무': '문서 접수·발송 경로와 보존, 담당·연락처를 명확히 하세요.',
-    '의회·감사 대응': '요구 항목별 1:1 답변, 사실·수치·원인·개선대책 순서로 쓰고 요구 범위 밖 자료는 넣지 마세요.',
-    '주요사업': '사업 목적·범위·추진 체계와 부서별 역할을 구분해 쓰세요.',
-    'BSC(성과지표)': '지표 정의·산식·측정 주기와 목표 대비 실적을 같은 기준으로 비교하세요.',
-    '운영총괄': '운영 주체·절차·비상 대응 체계를 한눈에 보이게 정리하세요.',
-    '민원 대응': '민원 발생 경위·처리 결과·재발 방지 대책을 사실 위주로 쓰세요.',
-    '서비스 운영·기능도입 검토': '현재 서비스 흐름, 도입 필요성, 대안(자체 개발·용역·상용) 비교와 검토 의견을 제시하세요.',
-    '외부연계(API·유관기관)': '연계 방식·데이터 항목·장애 책임 경계와 협약·계약 근거를 명시하세요.',
-    '시스템 작업·패치이력 보고': '작업 일시·대상·내용·결과·장애 여부를 시간순으로, 앱·홈페이지·보안점검을 구분해 기록하세요.',
-    '개인정보보호': '수집·이용·보관·파기 흐름과 접근 권한, 위탁·제3자 제공 여부를 확인해 쓰세요.',
-    '시스템 유지관리': '유지관리 범위(상주·원격)와 장애 대응 시간, 처리 이력 근거를 붙이세요.',
-    '용역·발주': '계약 방식과 근거, 사전 절차(방침·계약심사·일상감사), 과업지시서·규격 변경 절차를 확인하세요.',
-    '시설·장비 점검': '점검 일시·대상·지적사항·조치 결과를 표로 정리하고 위험도 순으로 쓰세요.',
-    '협력사·현장인력 관리': '지시 내용·이행 확인·인력 투입 현황을 사실로 기록하고 책임 주체를 구분하세요.',
-    '안전·보건 조치': '위험 요인, 조치 전후 상태, 근거 기준을 함께 적으세요.',
-    '현장 민원 수습': '민원 내용·현장 확인 결과·조치와 향후 대응 계획을 시간순으로 쓰세요.',
-    '현장 작업 결과': '작업 일시·장소·대상·소요 시간·수량을 사실 위주로 간결하게 적으세요.',
-    '비품·수선 요청': '필요 사유, 수량·규격, 긴급도, 미조치 시 영향을 함께 쓰세요.',
-    '특이사항·안전 이상 보고': '발견 시각·상황·즉시 조치·추가 필요 조치를 순서대로 보고하세요.'
-  };
+    { id: "facility-check", cat: 'public', jobId: "site", key: "시설·장비 점검", label: "시설·장비 점검",
+      detailLabel: "시설·장비 점검", quote: "시설·장비 점검",
+      need: "점검 일시·대상·지적사항·조치 결과를 표로 정리하고 위험도 순으로 써야 합니다.",
+      recommends: ["report", "excel"], order: 1, added: false },
+    { id: "contractor", cat: 'public', jobId: "site", key: "협력사·현장인력 관리", label: "협력사·현장인력 관리",
+      detailLabel: "협력사·현장인력 관리", quote: "협력사·현장인력 관리",
+      need: "지시 내용·이행 확인·인력 투입 현황을 사실로 기록하고 책임 주체를 구분해야 합니다.",
+      recommends: ["report", "collab"], order: 2, added: false },
+    { id: "safety", cat: 'public', jobId: "site", key: "안전·보건 조치", label: "안전·보건 조치",
+      detailLabel: "안전·보건 조치", quote: "안전·보건 조치",
+      need: "위험 요인과 조치 전후 상태, 근거 기준을 함께 적어야 합니다.",
+      recommends: ["report", "review"], order: 3, added: false },
+    { id: "field-complaint", cat: 'public', jobId: "site", key: "현장 민원 수습", label: "현장 민원 수습",
+      detailLabel: "현장 민원 수습", quote: "현장 민원 수습",
+      need: "민원 내용·현장 확인 결과·조치와 향후 대응 계획을 시간순으로 써야 합니다.",
+      recommends: ["mail", "report"], order: 4, added: false },
 
-  /* 세부 업무별 자연 문장 조각 — 「업무명 관점에서 (need)」 로 조립된다 */
+    { id: "work-result", cat: 'public', jobId: "field", key: "현장 작업 결과", label: "현장 작업 결과 보고",
+      detailLabel: "현장 작업 결과", quote: "현장 작업 결과",
+      need: "작업 일시·장소·대상·소요 시간·수량을 사실 위주로 간결하게 적어야 합니다.",
+      recommends: ["report", "summary"], order: 1, added: false },
+    { id: "supply-request", cat: 'public', jobId: "field", key: "비품·수선 요청", label: "비품·수선 요청",
+      detailLabel: "비품·수선 요청", quote: "비품·수선 요청",
+      need: "필요 사유와 수량·규격, 긴급도, 미조치 시 영향을 함께 써야 합니다.",
+      recommends: ["collab", "mail"], order: 2, added: false },
+    { id: "anomaly-report", cat: 'public', jobId: "field", key: "특이사항·안전 이상 보고", label: "특이사항·안전 이상 보고",
+      detailLabel: "특이사항·안전 이상 보고", quote: "특이사항·안전 이상 보고",
+      need: "발견 시각·상황·즉시 조치·추가 필요 조치를 순서대로 보고해야 합니다.",
+      recommends: ["report", "mail"], order: 3, added: false },
+  ];
 })(window.PW);

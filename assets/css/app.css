@@ -590,3 +590,174 @@ body.sheet-open{overflow:hidden}
   .step-title{font-size:15.5px}
   .purpose-desc{font-size:11px}
 }
+
+/* =========================================================
+   v4 — 상위 카테고리 내비게이션
+   ========================================================= */
+.brand{gap:11px}
+.brand-text{min-width:0}
+.catnav{
+  flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;
+  padding:2px 0;
+}
+.catnav::-webkit-scrollbar{display:none}
+.cat{
+  flex:none;display:inline-flex;align-items:center;gap:5px;
+  padding:8px 12px;border-radius:999px;border:1px solid transparent;
+  background:transparent;color:var(--ink-2);
+  font-size:12.5px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;
+  cursor:pointer;transition:background .16s,border-color .16s,color .16s;
+}
+.cat:hover{background:#eef0f5;color:var(--ink)}
+.cat-ic{font-size:13px;line-height:1}
+.cat-soon{
+  font-size:9.5px;font-weight:800;letter-spacing:-.01em;
+  color:#8b95a1;background:#eceff4;border-radius:5px;padding:2px 5px;
+}
+.cat.is-on{border-color:#b9c2ff;background:#fff;color:var(--brand-ink);box-shadow:0 6px 16px -12px rgba(74,92,245,.9)}
+.cat.is-on .cat-soon{color:#6a74a8;background:#eef1ff}
+.cat:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,92,245,.18)}
+
+/* =========================================================
+   v4 — 4단계 레일 / 스텝 패널
+   ========================================================= */
+.step-rail{
+  display:flex;align-items:center;gap:6px;
+  padding:0 0 16px;margin:0 0 18px;
+  border-bottom:1px dashed var(--line);
+  overflow-x:auto;scrollbar-width:none;
+}
+.step-rail::-webkit-scrollbar{display:none}
+.rail-step{
+  flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;
+  padding:7px 9px;border-radius:10px;border:1px solid var(--line);
+  background:#fbfcfe;color:var(--ink-3);cursor:pointer;
+  font-size:11.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
+  transition:background .16s,border-color .16s,color .16s;
+}
+.rail-step:hover{border-color:#cfd6e0;background:#fff}
+.rail-num{font-size:10.5px;font-weight:800;color:var(--ink-4);letter-spacing:0}
+.rail-label{overflow:hidden;text-overflow:ellipsis}
+.rail-check{display:none;margin-left:auto;font-size:10px;font-weight:900;color:var(--ok)}
+.rail-step.is-done .rail-check{display:inline}
+.rail-step.is-done{color:var(--ink-2);background:#fff;border-color:#dbe4de}
+.rail-step.is-current{border-color:#b9c2ff;background:var(--brand-tint);color:var(--brand-ink)}
+.rail-step.is-current .rail-num{color:var(--brand-ink)}
+.rail-step.is-locked{opacity:.55}
+.rail-step:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,92,245,.16)}
+
+.wstep + .wstep{margin-top:26px;padding-top:22px;border-top:1px dashed var(--line)}
+.wizard{padding-bottom:24px}
+
+/* STEP 01 직무 카드 */
+.job-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.job-card{
+  position:relative;display:flex;gap:11px;align-items:flex-start;text-align:left;
+  padding:14px 14px 15px;border-radius:16px;border:1px solid var(--line);
+  background:#fff;cursor:pointer;
+  transition:border-color .18s,box-shadow .18s,transform .18s,background .18s;
+}
+.job-card:hover{border-color:#ccd3e0;box-shadow:0 10px 24px -18px rgba(17,24,39,.55);transform:translateY(-1px)}
+.job-card:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(74,92,245,.16);border-color:#b9c2ff}
+.job-card.is-on{
+  border-color:#b9c2ff;background:linear-gradient(180deg,#f7f8ff 0%,#eef1ff 100%);
+  box-shadow:0 12px 28px -20px rgba(74,92,245,.9);
+}
+.job-icon{
+  width:34px;height:34px;flex:none;border-radius:11px;background:#f4f6f9;
+  display:grid;place-items:center;font-size:17px;
+}
+.job-card.is-on .job-icon{background:#fff;box-shadow:0 4px 12px -6px rgba(74,92,245,.55)}
+.job-text{min-width:0;padding-right:12px}
+.job-name{display:block;font-size:14px;font-weight:800;letter-spacing:-.02em;line-height:1.35}
+.job-desc{display:block;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.45}
+.job-card.is-on .job-desc{color:#6a74a8}
+.job-check{
+  position:absolute;top:10px;right:10px;width:17px;height:17px;border-radius:50%;
+  background:var(--brand);color:#fff;font-size:10px;font-weight:800;
+  display:grid;place-items:center;opacity:0;transform:scale(.5);
+  transition:opacity .18s,transform .18s;
+}
+.job-card.is-on .job-check{opacity:1;transform:scale(1)}
+
+/* STEP 03 결과물 카드 */
+.out-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.out-card{
+  position:relative;display:flex;gap:11px;align-items:flex-start;text-align:left;
+  padding:13px 13px 14px;border-radius:16px;border:1px solid var(--line);
+  background:#fff;cursor:pointer;
+  transition:border-color .18s,box-shadow .18s,transform .18s,background .18s;
+}
+.out-card:hover{border-color:#ccd3e0;box-shadow:0 10px 24px -18px rgba(17,24,39,.55);transform:translateY(-1px)}
+.out-card:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(74,92,245,.16);border-color:#b9c2ff}
+.out-card.is-on{border-color:#b9c2ff;background:linear-gradient(180deg,#f7f8ff 0%,#eef1ff 100%)}
+.out-card.is-rec{border-color:#dfe4ff}
+.out-icon{
+  width:32px;height:32px;flex:none;border-radius:10px;background:#f4f6f9;
+  display:grid;place-items:center;font-size:16px;
+}
+.out-card.is-on .out-icon{background:#fff}
+.out-text{min-width:0;padding-right:8px}
+.out-name{display:block;font-size:13.5px;font-weight:800;letter-spacing:-.02em;line-height:1.35}
+.out-desc{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px;line-height:1.4}
+.out-ex{display:block;font-size:10.5px;color:var(--ink-4);margin-top:5px;line-height:1.4}
+.out-badge{
+  position:absolute;top:9px;right:9px;padding:2px 6px;border-radius:6px;
+  background:var(--brand);color:#fff;font-size:9.5px;font-weight:800;letter-spacing:-.01em;
+}
+.out-badge.is-sub{background:#e6e9f6;color:#5b6790}
+.out-check{
+  position:absolute;bottom:9px;right:9px;width:16px;height:16px;border-radius:50%;
+  background:var(--brand);color:#fff;font-size:9.5px;font-weight:800;
+  display:grid;place-items:center;opacity:0;transform:scale(.5);
+  transition:opacity .18s,transform .18s;
+}
+.out-card.is-on .out-check{opacity:1;transform:scale(1)}
+.out-card.is-on .out-badge{right:30px}
+
+/* STEP 04 세부 조건 */
+.more-btn{
+  display:block;width:100%;margin-top:14px;padding:9px 12px;
+  border-radius:11px;border:1px dashed #ccd3ff;background:#f8f9ff;
+  color:var(--brand-ink);font-size:12px;font-weight:700;letter-spacing:-.01em;cursor:pointer;
+}
+.more-btn:hover{background:#eef1ff}
+.more-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,92,245,.16)}
+.guard-block{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line)}
+.guard-block .q-label{margin-bottom:10px}
+
+/* 준비 중 카테고리 */
+.planned-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.planned-title{margin:0;font-size:18px;font-weight:800;letter-spacing:-.03em}
+.planned-badge{
+  padding:3px 8px;border-radius:7px;background:#fff4e5;color:#8a5a00;
+  font-size:10.5px;font-weight:800;letter-spacing:-.01em;
+}
+.planned-desc{margin:8px 0 14px;font-size:13px;color:var(--ink-2);line-height:1.65}
+.planned-examples{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.example-card{
+  display:flex;flex-direction:column;gap:3px;padding:12px 13px;
+  border:1px solid var(--line);border-radius:13px;background:#fbfcfe;
+}
+.example-card b{font-size:12.8px;font-weight:800;letter-spacing:-.02em}
+.example-card span{font-size:11.5px;color:var(--ink-3);line-height:1.45}
+.planned-plans{margin-top:18px}
+.planned-plans h3{margin:0 0 7px;font-size:12.5px;font-weight:800;letter-spacing:-.02em;color:var(--ink-2)}
+.planned-plans ul{margin:0;padding-left:18px;color:var(--ink-3);font-size:12px;line-height:1.75}
+.planned-go{margin-top:18px;width:100%}
+
+@media (max-width:1024px){
+  .catnav{padding-bottom:2px}
+  .cat{font-size:11.5px;padding:7px 10px}
+  .step-rail{gap:5px;padding-bottom:12px;margin-bottom:14px}
+  .rail-step{padding:6px 7px;gap:4px;font-size:10.5px}
+  .job-grid{grid-template-columns:1fr 1fr}
+  .out-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .job-grid,.out-grid,.planned-examples{grid-template-columns:1fr}
+  .rail-label{display:none}
+  .rail-step{justify-content:center}
+}
