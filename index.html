@@ -313,19 +313,6 @@ a{color:inherit;text-decoration:none}
 }
 .gauge-tag.is-done{color:#0f9d63}
 
-/* 블록 배지 */
-.blk-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
-.blk-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:10.5px;font-weight:600;color:#a3adb9;background:#f6f8fa;
-  border:1px solid transparent;border-radius:7px;padding:3px 8px;
-  cursor:pointer;letter-spacing:-.01em;
-  transition:color .2s, background .2s, border-color .2s;
-}
-.blk-badge i{width:5px;height:5px;border-radius:50%;background:#cbd3dd;transition:background .2s}
-.blk-badge.is-ready{color:var(--ink-2);background:#fff;border-color:var(--line)}
-.blk-badge.is-ready i{background:var(--ok)}
-.blk-badge:hover{border-color:#ccd3e0;color:var(--ink)}
 
 /* 본문 */
 .prompt-body{flex:1;min-height:0;overflow-y:auto;padding:14px 14px 16px;background:#fff;scroll-behavior:smooth}
@@ -344,49 +331,79 @@ a{color:inherit;text-decoration:none}
 .empty-desc{margin:0;font-size:12.5px;color:var(--ink-4);line-height:1.72;letter-spacing:-.01em;max-width:280px}
 .empty-desc b{color:#7280d8;font-weight:700}
 
-.blocks{display:block}
-.blk{
-  position:relative;padding:13px 15px 14px;margin-bottom:8px;
-  border:1px solid var(--line);border-radius:14px;background:#fff;
-  transition:border-color .2s;
+/* =========================================================
+   실시간 타이핑 프롬프트 에디터
+   ========================================================= */
+.pw-doc{display:block}
+.pw-bar{
+  position:sticky;top:0;z-index:2;
+  display:flex;align-items:center;gap:7px;
+  margin:0 0 10px;padding:2px 0 9px;
+  background:#fff;border-bottom:1px dashed var(--line-2);
+  font-family:'Noto Sans KR',-apple-system,sans-serif;
 }
-.blk:hover{border-color:#dde3ea}
-.blk-head{display:flex;align-items:center;gap:7px;margin-bottom:8px}
-.blk-label{
-  font-size:11.5px;font-weight:800;letter-spacing:-.01em;
-  color:var(--c);background:var(--tint);padding:3px 9px;border-radius:8px;
+.pw-dot{flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok);transition:background .2s}
+.pw-dot.is-typing{background:#f0a020;animation:pwPulse .9s ease-in-out infinite}
+@keyframes pwPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+.pw-status{font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:-.01em;white-space:nowrap;transition:color .2s}
+.pw-status.is-typing{color:#b26a00}
+.pw-status.is-done{color:#0f9d63}
+.pw-meta{font-size:10.5px;color:var(--ink-4);letter-spacing:0;margin-left:auto;white-space:nowrap}
+.pw-edit{
+  flex:none;padding:3px 8px;border-radius:7px;border:1px solid var(--line);background:#fff;
+  color:var(--ink-3);font-size:10.5px;font-weight:700;letter-spacing:-.01em;cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
 }
-.blk-flag{
-  font-size:10px;font-weight:700;color:var(--c);background:var(--tint);
-  padding:2px 7px;border-radius:999px;opacity:0;letter-spacing:0;
-}
-.blk-wait{font-size:10px;color:var(--ink-4);background:#f4f6f9;padding:2px 7px;border-radius:999px;margin-left:auto;letter-spacing:0}
-.blk-body{display:block}
-.blk-line{
-  font-size:12.8px;line-height:1.72;color:var(--ink-2);letter-spacing:-.01em;
+.pw-edit:hover{background:#fafbfd;border-color:#ccd3e0;color:var(--ink)}
+.pw-edit[aria-pressed="true"]{background:var(--brand-tint);border-color:#d3daff;color:var(--brand-ink)}
+.pw-editor{
+  font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Noto Sans KR',monospace;
+  font-size:12.6px;line-height:1.78;letter-spacing:-.005em;color:#20262f;
   white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;
 }
-.blk-line + .blk-line{margin-top:2px}
-.blk-line.is-bullet{position:relative;padding-left:13px}
-.blk-line.is-bullet::before{
-  content:'';position:absolute;left:3px;top:9px;width:4px;height:4px;border-radius:50%;
-  background:var(--c);opacity:.7;
+.pw-seg{margin:0 0 11px}
+.pw-seg:last-child{margin-bottom:0}
+.pw-mark{
+  background:rgba(74,92,245,.11);color:inherit;border-radius:3px;
+  box-shadow:inset 0 0 0 1px rgba(74,92,245,.06);
+  transition:background .6s ease,box-shadow .6s ease;
 }
-.blk--empty{border-style:dashed;background:#fcfdff}
-.blk--empty:hover{border-color:#d9e0ea}
-.blk-ph{margin:0;font-size:12.3px;color:var(--ink-4);line-height:1.62;letter-spacing:-.01em}
-
-/* 방금 바뀐 블록 플래시 */
-@keyframes blkFlash{
-  0%{background:var(--tint);box-shadow:inset 3px 0 0 var(--c), 0 8px 22px -18px var(--c);border-color:transparent}
-  45%{background:var(--tint);box-shadow:inset 3px 0 0 var(--c)}
-  100%{background:#fff;box-shadow:inset 3px 0 0 transparent;border-color:var(--line)}
+.pw-mark.is-faded{background:transparent;box-shadow:none}
+.pw-caret{
+  display:inline-block;width:2px;height:1.05em;margin-left:1px;
+  background:var(--brand);border-radius:1px;vertical-align:-.16em;
+  animation:pwBlink 1.05s steps(1,end) infinite;
 }
-.blk.flash{animation:blkFlash 1.2s ease-out}
-.blk.flash .blk-flag{animation:flagShow 1.2s ease-out}
-@keyframes flagShow{0%{opacity:1}65%{opacity:1}100%{opacity:0}}
-@keyframes blkEnter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
-.blk.enter{animation:blkEnter .42s cubic-bezier(.22,.85,.25,1) both}
+.pw-caret.is-writing{animation:pwBlink .5s steps(1,end) infinite}
+@keyframes pwBlink{0%,48%{opacity:1}49%,100%{opacity:0}}
+.pw-textarea{
+  display:block;width:100%;min-height:180px;resize:vertical;
+  border:1px solid var(--line);border-radius:12px;background:#fff;
+  padding:11px 12px;color:#20262f;
+  font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Noto Sans KR',monospace;
+  font-size:12.6px;line-height:1.78;letter-spacing:-.005em;
+  outline:none;
+}
+.pw-textarea:focus{border-color:#b9c2ff;box-shadow:0 0 0 3px rgba(74,92,245,.12)}
+.pw-hint{
+  margin:10px 0 0;font-size:11.5px;line-height:1.6;color:var(--ink-4);
+  font-family:'Noto Sans KR',-apple-system,sans-serif;letter-spacing:-.01em;
+}
+.pw-hint b{color:#7280d8;font-weight:700}
+.pw-foot{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  margin-top:10px;padding-top:9px;border-top:1px dashed var(--line-2);
+  font-size:11px;line-height:1.5;color:#9a6700;
+  font-family:'Noto Sans KR',-apple-system,sans-serif;letter-spacing:-.01em;
+}
+.pw-foot button{
+  flex:none;padding:3px 9px;border-radius:7px;border:1px solid #f0d9a8;background:#fffaf0;
+  color:#8a5a00;font-size:10.5px;font-weight:800;cursor:pointer;
+}
+.pw-foot button:hover{background:#fff3d6}
+@media (prefers-reduced-motion: reduce){
+  .pw-caret,.pw-dot.is-typing{animation:none}
+}
 
 /* =========================================================
    후속 팁 + 액션 바
@@ -479,7 +496,6 @@ body.sheet-open{overflow:hidden}
   }
   .preview-col.is-collapsed{height:58px;max-height:58px}
   .preview-col.is-collapsed .gauge-row,
-  .preview-col.is-collapsed .blk-badges,
   .preview-col.is-collapsed .prompt-body{display:none}
   .preview-col.is-collapsed .preview-head{border-bottom:none}
   .m-full,.m-toggle{display:inline-flex}
@@ -492,13 +508,15 @@ body.sheet-open{overflow:hidden}
   .gauge-num{font-size:17px;min-width:46px}
   .gauge-tag{font-size:10.5px;min-width:72px}
   .gauge-track{height:6px}
-  .blk-badges{margin-top:8px;gap:4px}
-  .blk-badge{font-size:10px;padding:2px 6px}
   .prompt-body{padding:9px 10px 10px}
-  .blk{margin-bottom:7px;padding:10px 12px 11px;border-radius:12px}
-  .blk-head{margin-bottom:6px}
-  .blk-label{font-size:10.5px;padding:2px 7px}
-  .blk-line{font-size:12px;line-height:1.62}
+  .pw-bar{padding-bottom:7px;margin-bottom:8px}
+  .pw-status{font-size:10px}
+  .pw-meta{display:none}
+  .pw-edit{font-size:9.5px;padding:2px 6px;border-radius:6px}
+  .pw-editor{font-size:11.6px;line-height:1.66}
+  .pw-seg{margin-bottom:8px}
+  .pw-hint{font-size:10.5px}
+  .pw-textarea{font-size:11.6px;line-height:1.66;min-height:140px}
   .preview-col .empty{padding:8px 14px}
   .preview-col .empty-art{display:none}
   .preview-col .empty-title{font-size:12.5px;margin-bottom:4px}
@@ -522,10 +540,12 @@ body.sheet-open{overflow:hidden}
   body.sheet-open .gauge-num{font-size:20px;min-width:54px}
   body.sheet-open .gauge-tag{font-size:11px;min-width:80px}
   body.sheet-open .gauge-track{height:8px}
-  body.sheet-open .blk-badge{font-size:10.5px;padding:3px 8px}
   body.sheet-open .prompt-body{padding:12px 12px 14px}
-  body.sheet-open .blk{padding:13px 15px 14px;margin-bottom:8px}
-  body.sheet-open .blk-line{font-size:12.8px;line-height:1.72}
+  body.sheet-open .pw-editor{font-size:12.6px;line-height:1.78}
+  body.sheet-open .pw-status{font-size:11px}
+  body.sheet-open .pw-meta{display:inline}
+  body.sheet-open .pw-edit{font-size:10.5px;padding:3px 8px}
+  body.sheet-open .pw-textarea{font-size:12.6px;line-height:1.78;min-height:220px}
   body.sheet-open .preview-col .actions{display:flex}
   body.sheet-open .preview-col .tips.is-open{display:block}
   body.sheet-open .sheet-close{display:grid}
@@ -663,7 +683,7 @@ body.sheet-open{overflow:hidden}
 
     </div>
 
-    <!-- =================== 오른쪽: 미리보기 =================== -->
+    <!-- =================== 오른쪽: 실시간 프롬프트 에디터 =================== -->
     <aside class="preview-col" id="previewCol" aria-label="프롬프트 실시간 미리보기">
       <div class="sheet-handle" id="sheetHandle" aria-hidden="true"><span></span></div>
 
@@ -671,10 +691,9 @@ body.sheet-open{overflow:hidden}
         <div class="ph-top">
           <div class="ph-title">
             <span class="live-dot" aria-hidden="true"></span>
-            실시간 조립 미리보기
+            실시간 프롬프트
           </div>
           <div class="ph-right">
-            <span class="ph-count" id="blockCount">0/5 블록</span>
             <button type="button" class="m-full" id="mFull" aria-controls="promptBody">전체 보기</button>
             <button type="button" class="m-toggle" id="mToggle" aria-expanded="true" aria-controls="promptBody">접기</button>
             <button type="button" class="sheet-close" id="sheetClose" aria-label="미리보기 닫기">✕</button>
@@ -686,17 +705,34 @@ body.sheet-open{overflow:hidden}
           <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
           <div class="gauge-tag" id="pctLabel">시작 전</div>
         </div>
-
-        <div class="blk-badges" id="blockBadges"></div>
       </div>
 
       <div class="prompt-body" id="promptBody">
         <div class="empty" id="emptyState">
-          <div class="empty-art" aria-hidden="true">🧩</div>
+          <div class="empty-art" aria-hidden="true">⌨️</div>
           <p class="empty-title">아직 비어 있어요</p>
-          <p class="empty-desc">왼쪽에서 <b>용도</b>를 고르면<br>역할·독자·맥락·형식·금지사항<br>다섯 블록이 하나씩 조립됩니다.</p>
+          <p class="empty-desc">왼쪽에서 <b>용도</b>를 고르면<br>완성된 프롬프트가 한 글자씩<br>여기에 써 내려갑니다.</p>
         </div>
-        <div class="blocks" id="blocks" hidden></div>
+
+        <div class="pw-doc" id="promptDoc" hidden>
+          <div class="pw-bar" id="pwBar">
+            <span class="pw-dot" id="pwDot" aria-hidden="true"></span>
+            <span class="pw-status" id="pwStatus">실시간 프롬프트 생성 중…</span>
+            <span class="pw-meta" id="pwMeta"></span>
+            <button type="button" class="pw-edit" id="pwEdit" aria-pressed="false" aria-controls="promptEditor">✎ 직접 수정</button>
+          </div>
+
+          <div class="pw-editor" id="promptEditor" aria-label="완성된 프롬프트"></div>
+
+          <textarea class="pw-textarea" id="pwTextarea" hidden spellcheck="false" aria-label="프롬프트 직접 수정"></textarea>
+
+          <p class="pw-hint" id="pwHint" hidden>왼쪽 2단계의 <b>핵심 상황·메모</b>를 채우면 “상황은 다음과 같습니다” 문단이 이어집니다.</p>
+
+          <div class="pw-foot" id="pwFoot" hidden>
+            <span>선택이 바뀌었어요. 지금은 직접 수정한 글이 그대로 쓰입니다.</span>
+            <button type="button" id="pwRebuild">↻ 자동 생성 반영</button>
+          </div>
+        </div>
       </div>
 
       <div class="tips" id="tipsPanel"></div>
@@ -721,7 +757,7 @@ body.sheet-open{overflow:hidden}
   </span>
   <span class="mb-text">
     <b>전체 보기 · 복사 · 챗GPT</b>
-    <span id="mbSub">칩을 누르면 실시간으로 조립돼요</span>
+    <span id="mbSub">칩을 누르면 문장이 실시간으로 써져요</span>
   </span>
   <span class="mb-arrow" aria-hidden="true">▲</span>
 </button>
@@ -737,33 +773,31 @@ body.sheet-open{overflow:hidden}
      1. 데이터 정의
      ======================================================= */
 
-  /* =======================================================
-     작성자 직무·포지션 (같은 문서도 관점이 달라진다)
-     ======================================================= */
+  /* 작성자 직무·포지션 (같은 문서도 관점이 달라진다) */
   var JOBS = {
     '기획·운영·행정': {
-      role: '작성자는 기획·예산·서무·성과·민원을 함께 다루는 운영(기획·운영·행정) 부서 실무자입니다. 상위계획과의 정합성, 근거 숫자, 부서 간 이해관계를 먼저 정리해 설득하세요.',
+      domain: '기획·예산·성과·민원을 아우르는 운영',
       points: ['예산·규정 근거와 상위계획 정합성', '부서 간 역할·일정 조율', '계획 대비 성과지표(BSC)와 환류'],
       tasks: ['기획','예산(편성·집행)','서무','의회·감사 대응','주요사업','BSC(성과지표)','운영총괄','민원 대응']
     },
     '시스템·IT·보안': {
-      role: '작성자는 서비스 운영·외부 연계·보안·유지관리·용역을 맡는 시스템·IT·보안 실무자입니다. 장애와 작업 이력, 계약·책임 경계, 보안 규정 준수를 사실로 정리하세요.',
+      domain: '시스템·IT 보안',
       points: ['서비스 운영과 장애 이력·원인', '외부 연계·용역 계약 범위와 책임 경계', '개인정보·보안 규정 준수 여부'],
       tasks: ['서비스 운영·기능도입 검토','외부연계(API·유관기관)','시스템 작업·패치이력 보고','개인정보보호','시스템 유지관리','용역·발주']
     },
     '현장관리·안전감독': {
-      role: '작성자는 시설·장비 점검과 협력사·현장인력, 안전·보건, 현장 민원을 맡는 현장관리·안전감독자입니다. 위험 요인과 조치 결과를 일시·장소·담당과 함께 적으세요.',
+      domain: '시설·장비 점검과 협력사 안전관리',
       points: ['시설·장비 점검 결과와 위험 요인', '협력사·현장인력 지시와 이행 확인', '안전·보건 조치와 민원 수습'],
       tasks: ['시설·장비 점검','협력사·현장인력 관리','안전·보건 조치','현장 민원 수습']
     },
     '현장 실무': {
-      role: '작성자는 현장 작업을 직접 수행하는 실무자입니다. 어려운 용어 대신 작업 결과·소요 시간·수량을 사실 위주로 간결하게 전달하세요.',
+      domain: '현장 작업',
       points: ['현장 작업 결과와 소요 시간·수량', '비품·수선 요청의 필요성과 긴급도', '특이사항·안전 이상 보고'],
       tasks: ['현장 작업 결과','비품·수선 요청','특이사항·안전 이상 보고']
     }
   };
 
-  /* 세부 업무별 한 줄 포인트 */
+  /* 세부 업무별 한 줄 포인트 (TASK_FOCUS가 없을 때의 대체 문장) */
   var TASK_NOTES = {
     '기획': '중장기·상위계획과의 정합성, 추진 일정과 성과 목표를 먼저 밝히세요.',
     '예산(편성·집행)': '편성 근거(전년도 집행률·단가)와 집행 시기, 재원 구분을 숫자로 제시하세요.',
@@ -788,70 +822,109 @@ body.sheet-open{overflow:hidden}
     '특이사항·안전 이상 보고': '발견 시각·상황·즉시 조치·추가 필요 조치를 순서대로 보고하세요.'
   };
 
+  /* 세부 업무별 자연 문장 조각 — 「업무명 관점에서 (need)」 로 조립된다 */
+  var TASK_FOCUS = {
+    '기획': {
+      label: '기획',
+      need: '중장기·상위계획과의 정합성, 추진 일정과 성과 목표를 먼저 밝혀야 합니다.'
+    },
+    '예산(편성·집행)': {
+      label: '예산 편성·집행',
+      need: '편성 근거(전년도 집행률·단가)와 집행 시기, 재원 구분을 숫자로 제시해야 합니다.'
+    },
+    '서무': {
+      label: '서무',
+      need: '문서 접수·발송 경로와 보존 기간, 담당·연락처를 분명히 적어야 합니다.'
+    },
+    '의회·감사 대응': {
+      label: '의회·감사 대응',
+      need: '요구 항목별로 1:1 답변을 맞추고, 사실·수치·원인·개선대책 순서로 쓰되 요구 범위 밖 자료는 넣지 않아야 합니다.'
+    },
+    '주요사업': {
+      label: '주요사업',
+      need: '사업 목적·범위·추진 체계와 부서별 역할을 구분해 써야 합니다.'
+    },
+    'BSC(성과지표)': {
+      label: 'BSC(성과지표)',
+      need: '지표 정의·산식·측정 주기와 목표 대비 실적을 같은 기준으로 비교해야 합니다.'
+    },
+    '운영총괄': {
+      label: '운영총괄',
+      need: '운영 주체·절차·비상 대응 체계가 한눈에 보이게 정리해야 합니다.'
+    },
+    '민원 대응': {
+      label: '민원 대응',
+      need: '민원 발생 경위·처리 결과·재발 방지 대책을 사실 위주로 써야 합니다.'
+    },
+    '서비스 운영·기능도입 검토': {
+      label: '서비스 운영·기능도입 검토',
+      need: '현재 서비스 흐름, 도입 필요성, 자체 개발·용역·상용 대안 비교와 검토 의견을 제시해야 합니다.'
+    },
+    '외부연계(API·유관기관)': {
+      label: '외부 연계(API·유관기관)',
+      need: '연계 방식·데이터 항목·장애 책임 경계와 협약·계약 근거를 명시해야 합니다.'
+    },
+    '시스템 작업·패치이력 보고': {
+      label: '시스템 작업 및 패치 이력 보고(앱·홈페이지·보안점검)',
+      need: '작업 일시, 대상, 결과와 장애 여부를 시간순으로 빠짐없이 정리해야 합니다.'
+    },
+    '개인정보보호': {
+      label: '개인정보보호',
+      need: '수집·이용·보관·파기 흐름과 접근 권한, 위탁·제3자 제공 여부를 확인해 써야 합니다.'
+    },
+    '시스템 유지관리': {
+      label: '시스템 유지관리',
+      need: '유지관리 범위(상주·원격)와 장애 대응 시간, 처리 이력 근거를 붙여야 합니다.'
+    },
+    '용역·발주': {
+      label: '용역·발주',
+      need: '계약 방식과 근거, 방침·계약심사·일상감사 같은 사전 절차, 과업지시서·규격 변경 절차를 함께 밝혀야 합니다.'
+    },
+    '시설·장비 점검': {
+      label: '시설·장비 점검',
+      need: '점검 일시·대상·지적사항·조치 결과를 표로 정리하고 위험도 순으로 써야 합니다.'
+    },
+    '협력사·현장인력 관리': {
+      label: '협력사·현장인력 관리',
+      need: '지시 내용·이행 확인·인력 투입 현황을 사실로 기록하고 책임 주체를 구분해야 합니다.'
+    },
+    '안전·보건 조치': {
+      label: '안전·보건 조치',
+      need: '위험 요인과 조치 전후 상태, 근거 기준을 함께 적어야 합니다.'
+    },
+    '현장 민원 수습': {
+      label: '현장 민원 수습',
+      need: '민원 내용·현장 확인 결과·조치와 향후 대응 계획을 시간순으로 써야 합니다.'
+    },
+    '현장 작업 결과': {
+      label: '현장 작업 결과',
+      need: '작업 일시·장소·대상·소요 시간·수량을 사실 위주로 간결하게 적어야 합니다.'
+    },
+    '비품·수선 요청': {
+      label: '비품·수선 요청',
+      need: '필요 사유와 수량·규격, 긴급도, 미조치 시 영향을 함께 써야 합니다.'
+    },
+    '특이사항·안전 이상 보고': {
+      label: '특이사항·안전 이상 보고',
+      need: '발견 시각·상황·즉시 조치·추가 필요 조치를 순서대로 보고해야 합니다.'
+    }
+  };
+
   /* =======================================================
-     보고서·기안문 전용 자동 조립 규칙 (공공기관·대기업 범용)
-     - 문서 성격이 양식을 먼저 결정한다: 공문 갑지 / 개조식 보고서
+     용도 4종 — 질문·예시·팁
+     expert / backdrop / principle / org 는 역할 문장을 만든다
      ======================================================= */
-  function reportFormatLines(a){
-    a = a || {};
-    var doc = a.doc || '';
-    var goal = a.goal || '';
-    var tone = a.tone || '';
-    var official = (doc.indexOf('타부서') >= 0 || doc.indexOf('대외') >= 0);
-    var lines = [];
-
-    if (official){
-      // 대외·타부서 협조공문 → 공문 갑지 서식
-      lines.push(['구조', '제목 → 1. 관련: [근거 공문·계획] → 2. 위 호와 관련하여 ~ 협조 요청드립니다(알려드립니다). → 가. ~ / 나. ~ (세부사항) → 붙임  1. ~ 1부.  끝.']);
-      lines.push(['문체', '정중하고 명확한 공문 서식. 「~바랍니다」「~요청드립니다」로 끝맺고 문서 마지막은 「끝.」으로 닫음. 감정·추측·구어체 금지']);
-      lines.push(['수신·협조', '수신처·참조를 명확히 하고, 요청 사항은 기한·제출 형식·담당 연락처까지 한 줄로 특정']);
-      if (tone.indexOf('비교표') >= 0){
-        lines.push(['표 활용', '세부사항이 여러 건이면 붙임에 대안·내역 비교표로 정리하고, 본문에는 결론만 씀']);
-      } else if (tone.indexOf('서술형') >= 0){
-        lines.push(['서술 방식', '가·나 항목 아래에 근거와 경위를 2~3문장으로 풀어 써서 처음 받는 부서도 이해되게']);
-      }
-    } else {
-      // 내부결재·방침수립 / 감사·의회·외부 요구자료 / 계약·발주·예산 검토 → 개조식 보고서
-      lines.push(['문체', '□ 대제목 → ㅇ 중항목 → - 세부내용 순으로 내려가고, 문장은 「~함 / ~임 / ~예정 / ~필요」로 끝맺음']);
-      lines.push(['본문 순서', '추진배경(관련 규정·상위계획) → 현황 및 문제점 → 검토내용(대안 비교) → 추진계획(소요예산·일정·전결권 확인) → 행정사항']);
-      if (tone.indexOf('비교표') >= 0){
-        lines.push(['표 활용', '검토내용은 비교 기준(비용·기간·리스크·근거 규정)을 열로 둔 대안 비교표로, 결론은 표 아래 3줄 이내']);
-      } else if (tone.indexOf('서술형') >= 0){
-        lines.push(['서술 보강', '□·ㅇ·- 개조식은 유지하되, 각 항목 아래에 2~3문장 근거 설명을 붙여 외부 제출에도 견디게']);
-      }
-    }
-
-    if (doc.indexOf('감사') >= 0 || doc.indexOf('의회') >= 0){
-      lines.push(['감사·의회 대응', '감정·변명·추측을 빼고 사실 → 수치 → 원인 → 개선대책(이행기한·담당) 순으로만 기술. 요구 범위 밖 자료는 넣지 않음']);
-      lines.push(['자료 범위', '요구 항목별로 답변을 1:1로 맞추고, 없거나 산출할 수 없는 항목은 사유와 대체 자료를 함께 표시']);
-    }
-    if (doc.indexOf('계약') >= 0 || doc.indexOf('발주') >= 0){
-      lines.push(['감사 대비 체크', '계약 방식(수의/경쟁)과 근거 조항 → 사전 절차(방침 수립 → 계약심사 → 일상감사) 이행 여부 → 과업·규격·예산 변경 시 절차와 결재선을 본문에 명시. 분할 발주·규격 변경·부당 수의 등 지적 소지가 있는 부분은 근거와 함께 선제적으로 설명']);
-    }
-    if (doc.indexOf('내부결재') >= 0 || doc.indexOf('방침') >= 0){
-      lines.push(['결재선', '기안자 → 검토자 → 결재권자 순으로 판단 근거가 이어지게 쓰고, 전결권자와 전결 범위를 표시']);
-    }
-
-    if (goal.indexOf('예산 방어') >= 0) lines.push(['예산 방어', '추가 소요액과 대체안(외주·민간 위탁 등) 비용을 같은 기준으로 나란히 제시하고, 절감·회피 효과를 숫자로 명시']);
-    if (goal.indexOf('신규 승인') >= 0) lines.push(['승인 요청', '무엇을·언제까지·얼마로 승인받으려는지 첫 3줄에 명시하고, 미승인 시 영향(일정·민원·안전)을 함께 적음']);
-    if (goal.indexOf('현황') >= 0) lines.push(['실적 보고', '계획 대비 실적을 같은 기준으로 비교하고, 미달 항목은 원인과 보완 계획까지 붙임']);
-    if (goal.indexOf('규정') >= 0) lines.push(['규정 검토', '적용 조항과 기준일을 먼저 밝히고, 상위 규정·개정 여부와 충돌하는 부분은 별도 표시']);
-
-    lines.push(['분량', 'A4 1~2장, 한 문단 3줄 이내, 표는 5열 이내']);
-    lines.push(['근거 표기', '인용한 규정·통계·기준일은 문장 끝에 괄호로 출처와 기준일을 적음']);
-    return lines;
-  }
-
   var PURPOSES = {
     report: {
       icon: '📄',
       title: '보고서·기안문',
       desc: '결재·감사·계약 검토까지 실무 문서',
       lead: '문서 성격과 결재선을 알면 감사에서 흔들리지 않는 논리가 잡힙니다.',
-      role: [
-        '당신은 대한민국 공공기관·공기업과 대기업에서 15년 넘게 기안·결재·감사 대응을 다뤄 온 실무 문서 전문가입니다.',
-        '결재권자가 30초 안에 승인 여부를 판단하도록 결론과 근거 숫자를 앞세우고, 감사·의회 지적을 받지 않을 구조로 씁니다.'
-      ],
+      org: '공공기관·대기업의',
+      expert: '실무 문서 전문가',
+      backdrop: '대한민국 공공기관·공기업과 대기업에서 15년 넘게 기안·결재·감사 대응을 다뤄 온 실무 문서 전문가',
+      principle: '결재권자가 30초 안에 승인 여부를 판단하도록 결론과 근거 숫자를 앞세우고, 감사·의회 지적을 받지 않을 구조로 씁니다.',
+      docNoun: '보고서',
       questions: [
         { key:'doc', field:'문서 성격', label:'문서 성격·독자는 무엇인가요?', hint:'결재선·수신처를 떠올려 보세요',
           chips:['내부결재·방침수립','타부서·대외 협조공문','감사·의회·외부 요구자료','계약·발주·예산 검토'] },
@@ -862,7 +935,6 @@ body.sheet-open{overflow:hidden}
         { key:'job', field:'작성자 직무', label:'작성자 직무·포지션은 무엇인가요?', hint:'고르면 세부 업무가 이어집니다',
           chips:['기획·운영·행정','시스템·IT·보안','현장관리·안전감독','현장 실무'] }
       ],
-      formatFn: reportFormatLines,
       placeholder: '예) 12월 정기점검 용역 인력 2명 증원 요청 / 현재 1인당 점검 대상 320건, 야간 고장 대응 평균 41분 / 11월에 2시간 초과 3건 / 추가 인건비 월 480만 원, 외주 대체 시 월 720만 원 / 올해 예산 잔액 1,200만 원 범위',
       example: '12월 정기점검 용역 인력 2명 증원을 요청드립니다. 현재 1인당 점검 대상 320건을 맡아 야간 고장 대응이 평균 41분 걸리고 있고, 11월에만 2시간을 넘긴 건이 3건 있었습니다. 추가 인건비는 월 480만 원이고, 외주로 돌리면 월 720만 원입니다. 올해 예산 잔액 1,200만 원 안에서 처리가 가능합니다.',
       tips: [
@@ -876,10 +948,11 @@ body.sheet-open{overflow:hidden}
       title: '눈치 보이는 메일·메시지',
       desc: '거절·일정 독촉·협조 요청·사과',
       lead: '상대와 목적을 알면 눈치 보지 않는 문장이 나옵니다.',
-      role: [
-        '당신은 공공기관·기업에서 상사·타부서·외부 용역사와 주고받는 비즈니스 커뮤니케이션을 15년간 다뤄 온 코치입니다.',
-        '관계를 해치지 않으면서 원하는 결과를 얻도록, 상대가 읽고 바로 행동할 수 있는 메시지를 씁니다.'
-      ],
+      org: '공공기관·기업의',
+      expert: '메일 커뮤니케이션 코치',
+      backdrop: '공공기관·기업에서 상사·타부서·외부 용역사와 주고받는 비즈니스 커뮤니케이션을 15년간 다뤄 온 코치',
+      principle: '관계를 해치지 않으면서 원하는 결과를 얻도록, 상대가 읽고 바로 행동할 수 있는 메시지를 씁니다.',
+      docNoun: '메일',
       questions: [
         { key:'to', field:'받는 사람', label:'누구에게 보내나요?', hint:'관계에 따라 표현이 달라집니다',
           chips:['상사·임원','타부서·동료','외부 거래처·용역사'] },
@@ -889,10 +962,6 @@ body.sheet-open{overflow:hidden}
           chips:['격식 있고 단호하게','부드럽고 유연하게','짧고 핵심만'] },
         { key:'job', field:'작성자 직무', label:'작성자 직무·포지션은 무엇인가요?', hint:'고르면 세부 업무가 이어집니다',
           chips:['기획·운영·행정','시스템·IT·보안','현장관리·안전감독','현장 실무'] }
-      ],
-      format: [
-        ['형식','제목 1개 + 본문(인사 → 상황·사유 → 요청 사항(기한·형식 명시) → 마무리 인사)'],
-        ['추가','메신저·유선 후속용 3~5문장 축약본도 함께. 공문으로 보낼 경우 수신처·결재선을 표기']
       ],
       placeholder: '예) 정기점검 용역사가 작업일을 12/20 → 12/13으로 앞당겨 달라고 요청 / 자재·인력 투입 일정상 12/18이면 가능 / 관계는 유지하면서 이번 요청은 정중히 거절하고 대안 날짜를 제시하고 싶음',
       example: '정기점검 용역사 담당자가 작업일을 12월 20일에서 12월 13일로 일주일 앞당겨 달라고 요청했습니다. 저희 자재·인력 투입 일정상 그대로는 어렵고, 12월 18일이면 맞출 수 있습니다. 관계는 유지하면서 이번 요청은 정중히 거절하고 대안 날짜를 제시하고 싶습니다.',
@@ -907,24 +976,20 @@ body.sheet-open{overflow:hidden}
       title: '엑셀·자동화·오류 해결',
       desc: '수식·피벗·VBA/파이썬 에러 수정',
       lead: '도구와 막힌 지점을 알면 바로 붙여 넣을 답이 나옵니다.',
-      role: [
-        '당신은 엑셀·구글 스프레드시트·VBA·파이썬 자동화를 실무에서 15년 다뤄 온 데이터 업무 전문가입니다.',
-        '실무자가 복사해 바로 붙여 넣을 수 있는 답을 주고, 왜 그렇게 되는지도 한두 줄로 설명합니다.'
-      ],
+      org: '공공기관·기업의',
+      expert: '데이터 업무 전문가',
+      backdrop: '엑셀·구글 스프레드시트·VBA·파이썬 자동화를 실무에서 15년 다뤄 온 데이터 업무 전문가',
+      principle: '실무자가 복사해 바로 붙여 넣을 수 있는 답을 주고, 왜 그렇게 되는지도 한두 줄로 설명합니다.',
+      docNoun: '작업',
       questions: [
         { key:'tool', field:'도구', label:'어떤 도구를 쓰고 있나요?', hint:'',
           chips:['엑셀 수식','구글 스프레드시트','파이썬/자동화','VBA/매크로'] },
-        { key:'task', field:'상황', label:'지금 어떤 상태인가요?', hint:'',
+        { key:'situation', field:'상황', label:'지금 어떤 상태인가요?', hint:'',
           chips:['원하는 기능 새로 짜기','오류 메시지 해결','느린 파일·코드 개선'] },
         { key:'depth', field:'설명 수준', label:'설명은 어느 정도가 좋나요?', hint:'',
           chips:['초보자도 복붙만 하게','원리까지 간단히'] },
         { key:'job', field:'작성자 직무', label:'작성자 직무·포지션은 무엇인가요?', hint:'고르면 세부 업무가 이어집니다',
           chips:['기획·운영·행정','시스템·IT·보안','현장관리·안전감독','현장 실무'] }
-      ],
-      format: [
-        ['순서','① 바로 쓸 수식·코드 먼저 ② 붙여 넣을 위치와 방법 ③ 예상 결과 ④ 흔한 오류와 대처'],
-        ['코드','복사 가능한 코드 블록으로, 시트명·범위는 예시로 명시'],
-        ['검증','집계 결과는 원본 5행 정도로 손계산해 확인할 수 있게 근거를 함께']
       ],
       placeholder: '예) 점검일지 시트의 A열(일자), B열(시설명), D열(지적건수)에서 시설별·월별 합계를 요약 시트에 자동으로 채우고 싶음 / 원본 행은 매일 아래로 추가됨 / 시설명은 A2:A12에 미리 적혀 있음',
       example: '점검일지 시트의 A열(일자), B열(시설명), D열(지적건수)에서 시설별·월별 합계를 요약 시트에 자동으로 채우고 싶습니다. 원본 행은 매일 아래로 추가됩니다. 시설명은 A2:A12에 미리 적혀 있습니다.',
@@ -939,10 +1004,11 @@ body.sheet-open{overflow:hidden}
       title: '회의록·자료 요약',
       desc: '긴 회의록·문서 → 결론·할 일 추출',
       lead: '원문 성격과 뽑을 것을 알면 필요한 것만 남습니다.',
-      role: [
-        '당신은 회의록과 긴 자료에서 의사결정에 필요한 정보만 뽑아내는 요약 전문가입니다.',
-        '원문에 없는 내용은 보태지 않고, 누가·언제·무엇을 하기로 했는지를 먼저 찾습니다.'
-      ],
+      org: '공공기관·기업의',
+      expert: '요약 전문가',
+      backdrop: '회의록과 긴 자료에서 의사결정에 필요한 정보만 뽑아내는 요약 전문가',
+      principle: '원문에 없는 내용은 보태지 않고, 누가·언제·무엇을 하기로 했는지를 먼저 찾습니다.',
+      docNoun: '정리',
       questions: [
         { key:'src', field:'원문 성격', label:'무엇을 요약하나요?', hint:'',
           chips:['회의 녹취·대화','긴 보고서·기사','이메일 스레드'] },
@@ -952,10 +1018,6 @@ body.sheet-open{overflow:hidden}
           chips:['임원 보고용 반 페이지','실무자용 상세 정리'] },
         { key:'job', field:'작성자 직무', label:'작성자 직무·포지션은 무엇인가요?', hint:'고르면 세부 업무가 이어집니다',
           chips:['기획·운영·행정','시스템·IT·보안','현장관리·안전감독','현장 실무'] }
-      ],
-      format: [
-        ['구조','① 한 줄 결론 ② 핵심 요약 ③ 표(항목/담당/기한) ④ 리스크·확인 필요 사항'],
-        ['원칙','원문에 없는 추론은 넣지 말고, 확인이 필요한 부분만 따로 표시']
       ],
       placeholder: '예) 오전 운영회의 녹취(부서장 + 3개 팀장 + 나, 약 50분) / 다음 주 예산 심의 전에 결정사항과 팀별 할 일만 뽑아 한 장으로 보고해야 함',
       example: '오늘 오전 운영회의 녹취입니다. 참석자는 부서장과 3개 팀장, 저를 포함해 6명이고 50분 분량입니다. 다음 주 예산 심의 전에 결정된 것과 팀별 할 일만 뽑아서 부서장님께 한 장으로 보고해야 합니다.',
@@ -1002,12 +1064,31 @@ body.sheet-open{overflow:hidden}
 
   var renderedPurpose = null;   // 질문 DOM을 다시 그린 기준
   var questionsDirty = false;   // 직무 변경 등으로 질문을 다시 그려야 함
-  var prevSig = {};             // 블록별 이전 내용 서명 (플래시 판별)
   var currentPrompt = '';
   var toastTimer = null;
   var rafPending = false;
   var desktopTipsOpen = false;
-  var prevPct = 0;
+  var prevPct = -1;
+
+  /* ---------- 실시간 타이핑 스트리밍 ---------- */
+  var TICK = 15;        // 한 프레임 15ms (12~18ms 사이의 타자 간격)
+  var FRAMES = 32;      // 한 번의 변경을 약 0.5초 안에 마무리
+  var MAX_CHUNK = 40;   // 한 프레임에 쓸 수 있는 최대 글자 수
+  var INSTANT = { context:1 };   // 메모 문단은 즉시 반영
+
+  var segs = [];        // [{key, text}] 목표 문단
+  var segText = {};     // key → 목표 전문
+  var shown = {};       // key → 지금까지 써진 글자 수
+  var fromIdx = {};     // key → 달라진 부분의 시작 위치
+  var segNodes = {};    // key → DOM 노드
+  var typingKeys = [];  // 지금 타이핑 중인 문단 key
+  var streamTimer = null;
+  var streamActive = false;
+  var streamChunk = 1;
+  var activeKey = null; // 커서를 둘 문단
+  var caretEl = null;
+  var editing = false;  // 직접 수정 모드
+  var editSig = '';     // 수정 모드에 들어갈 때의 선택 상태
 
   /* =======================================================
      3. DOM 헬퍼
@@ -1033,12 +1114,21 @@ body.sheet-open{overflow:hidden}
     exampleBtn: $('exampleBtn'),
     guardrailList: $('guardrailList'),
     emptyState: $('emptyState'),
-    blocks: $('blocks'),
+    promptBody: $('promptBody'),
+    promptDoc: $('promptDoc'),
+    pwEditor: $('promptEditor'),
+    pwTextarea: $('pwTextarea'),
+    pwBar: $('pwBar'),
+    pwDot: $('pwDot'),
+    pwStatus: $('pwStatus'),
+    pwMeta: $('pwMeta'),
+    pwEdit: $('pwEdit'),
+    pwHint: $('pwHint'),
+    pwFoot: $('pwFoot'),
+    pwRebuild: $('pwRebuild'),
     pctNum: $('pctNum'),
     pctLabel: $('pctLabel'),
     gaugeFill: $('gaugeFill'),
-    blockBadges: $('blockBadges'),
-    blockCount: $('blockCount'),
     copyBtn: $('copyBtn'),
     gptBtn: $('gptBtn'),
     tipsBtn: $('tipsBtn'),
@@ -1046,7 +1136,6 @@ body.sheet-open{overflow:hidden}
     previewCol: $('previewCol'),
     mFull: $('mFull'),
     mToggle: $('mToggle'),
-    promptBody: $('promptBody'),
     mobileBar: $('mobileBar'),
     mbPct: $('mbPct'),
     mbFill: $('mbFill'),
@@ -1205,151 +1294,496 @@ body.sheet-open{overflow:hidden}
   }
 
   /* =======================================================
-     5. 프롬프트 블록 모델
+     5. 문장 조립 — 선택값을 자연스러운 완성 문장으로
      ======================================================= */
+
+  /* 받침에 맞춰 조사를 고른다 */
+  var TRIM_CHARS = ' \t)]}.,';
+  function trimEnd(s){
+    var t = String(s || '');
+    while (t.length && TRIM_CHARS.indexOf(t.charAt(t.length - 1)) >= 0) t = t.slice(0, t.length - 1);
+    return t;
+  }
+  function josa(word, withBatchim, withoutBatchim){
+    var s = trimEnd(word);
+    if (!s) return withBatchim;
+    var code = s.charCodeAt(s.length - 1);
+    if (code < 0xAC00 || code > 0xD7A3) return withoutBatchim;
+    return (((code - 0xAC00) % 28) === 0) ? withoutBatchim : withBatchim;
+  }
+
+  /* ['a','b'] → 'a, b를' */
+  function objList(arr){
+    var s = arr.join(', ');
+    return s + josa(s, '을', '를');
+  }
 
   function memoLines(){
     return state.memo.split('\n').map(function(s){ return s.trim(); })
       .filter(function(s){ return s.length > 0; });
   }
 
-  function buildBlocks(){
-    var p = state.purpose ? PURPOSES[state.purpose] : null;
-    var job = (p && state.answers.job && JOBS[state.answers.job]) ? JOBS[state.answers.job] : null;
-    var blocks = [];
-
-    // [# 역할]
-    var roleLines = p ? p.role.slice(0) : [];
-    if (job) roleLines.push(job.role);
-    if (job && state.answers.task){
-      roleLines.push('이번 문서는 그중 「' + state.answers.task + '」 업무에 대한 것입니다. 해당 업무의 처리 절차·근거·감사 지적 소지를 기준으로 판단하세요.');
-    }
-    blocks.push({
-      key:'role', name:'역할', label:'# 역할',
-      c:'#6366f1', tint:'#eef0ff',
-      lines: roleLines,
-      bullets: false,
-      ph:'용도를 고르면, 이 일을 잘하는 전문가의 역할이 여기에 들어갑니다.'
-    });
-
-    // [# 독자·목적]
-    var aud = [];
-    if (p){
-      var q1 = p.questions[0], q2 = p.questions[1];
-      if (state.answers[q1.key]) aud.push(q1.field + ': ' + state.answers[q1.key]);
-      if (state.answers[q2.key]) aud.push(q2.field + ': ' + state.answers[q2.key]);
-      if (job) aud.push('작성자 직무: ' + state.answers.job);
-      if (job && state.answers.task) aud.push('세부 업무: ' + state.answers.task);
-    }
-    blocks.push({
-      key:'audience', name:'독자·목적', label:'# 독자·목적',
-      c:'#0ea5e9', tint:'#e8f6fe',
-      lines: aud, bullets: true,
-      ph:'누가 읽고 무엇을 원하는지 고르면 이 블록이 채워집니다.'
-    });
-
-    // [# 핵심 맥락]
-    var ctx = memoLines();
-    blocks.push({
-      key:'context', name:'핵심 맥락', label:'# 핵심 맥락',
-      c:'#f59e0b', tint:'#fff5e6',
-      lines: ctx, bullets: false,
-      ph:'핵심 상황·메모에 적은 내용이 그대로 들어갑니다. 숫자·기한·이름을 넣어 보세요.'
-    });
-
-    // [# 출력 형식]
-    var fmt = [];
-    if (p){
-      var fmtSrc = p.formatFn ? p.formatFn(state.answers) : p.format;
-      fmtSrc.forEach(function(f){ fmt.push(f[0] + ': ' + f[1]); });
-      if (!p.formatFn){
-        var q3 = p.questions[2];
-        if (state.answers[q3.key]) fmt.push(q3.field + ': ' + state.answers[q3.key]);
-      }
-      if (job) fmt.push('중점 체크포인트: ' + job.points.join(' · '));
-      if (job && state.answers.task && TASK_NOTES[state.answers.task]){
-        fmt.push('세부 업무 포인트: ' + TASK_NOTES[state.answers.task]);
-      }
-    }
-    blocks.push({
-      key:'format', name:'출력 형식', label:'# 출력 형식',
-      c:'#10b981', tint:'#e7f8f1',
-      lines: fmt, bullets: true,
-      ph:'목적과 톤을 고르면 결과물의 구조가 정해집니다.'
-    });
-
-    // [# 절대 금지사항]
-    var bans = [];
-    GUARDS.forEach(function(g){ if (state.guards[g.id]) bans.push(g.rule); });
-    blocks.push({
-      key:'bans', name:'금지사항', label:'# 절대 금지사항',
-      c:'#f43f5e', tint:'#ffecef',
-      lines: bans, bullets: true,
-      ph:'아래 3단계에서 헛소리 방지 장치를 하나라도 켜면 여기에 규칙이 붙습니다.'
-    });
-
-    return blocks;
+  function roleText(p, job){
+    var lead = job
+      ? '당신은 ' + p.org + ' ' + job.domain + ' 실무를 15년 넘게 맡아 온 ' + p.expert + '입니다.'
+      : '당신은 ' + p.backdrop + '입니다.';
+    return lead + ' ' + p.principle;
   }
 
-  function promptFromBlocks(blocks){
-    if (!state.purpose) return '';
+  var REPORT_READER = {
+    '내부결재·방침수립': '내부 결재권자가',
+    '타부서·대외 협조공문': '협조를 요청받는 타부서 담당자와 결재권자가',
+    '감사·의회·외부 요구자료': '감사·의회 담당자와 자료를 요구한 외부 기관이',
+    '계약·발주·예산 검토': '계약·예산 심사 담당자와 결재권자가'
+  };
+  var REPORT_DECIDE = {
+    '신규 승인·추진 요청': '핵심을 30초 안에 파악해 신규 승인·추진 여부를 결정할 수 있도록',
+    '현황·실적 보고': '계획 대비 실적과 미달 원인을 한눈에 파악할 수 있도록',
+    '문제 해결·예산 방어': '문제의 원인과 대안 비용을 나란히 비교해 예산을 방어할 수 있도록',
+    '규정·지침 검토': '적용 조항과 쟁점, 개정 여부를 빠르게 확인할 수 있도록'
+  };
+
+  function requestText(key, p, a){
+    if (key === 'report'){
+      var reader = REPORT_READER[a.doc] || '결재권자가';
+      var decide = REPORT_DECIDE[a.goal] || '핵심을 30초 안에 파악할 수 있도록';
+      return reader + ' ' + decide + ' ' + p.docNoun + '를 작성해 주세요.';
+    }
+    if (key === 'mail'){
+      var to = {'상사·임원':'상사·임원에게','타부서·동료':'타부서 동료에게','외부 거래처·용역사':'외부 거래처·용역사 담당자에게'}[a.to] || '상대에게';
+      var why = {'정중한 거절':'이번 요청은 정중히 거절하면서 대안을 제시하는','일정·회신 독촉':'일정과 회신을 재촉하는','협조·자료 요청':'협조와 자료를 요청하는','실수 사과·수습':'실수를 사과하고 수습 방안을 전하는'}[a.why] || '';
+      return to + ' ' + (why ? why + ' ' : '') + '메일을 써 주세요. 관계를 해치지 않으면서 상대가 읽고 바로 행동할 수 있어야 합니다.';
+    }
+    if (key === 'excel'){
+      var tool = {'엑셀 수식':'지금 쓰는 도구는 엑셀 수식입니다.','구글 스프레드시트':'지금 쓰는 도구는 구글 스프레드시트입니다.','파이썬/자동화':'지금 쓰는 도구는 파이썬 자동화입니다.','VBA/매크로':'지금 쓰는 도구는 VBA 매크로입니다.'}[a.tool] || '';
+      var need = {'원하는 기능 새로 짜기':'필요한 기능을 처음부터 만들어 주세요.','오류 메시지 해결':'지금 뜨는 오류 메시지의 원인을 찾아 고쳐 주세요.','느린 파일·코드 개선':'느려진 파일이나 코드를 빠르게 개선해 주세요.'}[a.situation] || '원하는 결과를 바로 쓸 수 있는 형태로 만들어 주세요.';
+      return (tool ? tool + ' ' : '') + need;
+    }
+    var src = {'회의 녹취·대화':'회의 녹취나 대화 기록에서','긴 보고서·기사':'긴 보고서나 기사에서','이메일 스레드':'이메일 스레드에서'}[a.src] || '긴 자료에서';
+    var focus = {'결정사항·할 일(담당/기한)':'결정사항과 할 일(담당·기한)을','핵심 3줄 + 리스크':'핵심 3줄과 리스크를','찬반·쟁점 비교':'찬반 논거와 쟁점을'}[a.focus] || '필요한 내용만';
+    return src + ' ' + focus + ' 뽑아 주세요.';
+  }
+
+  function formatText(key, p, a){
+    if (key === 'report'){
+      var doc = a.doc || '';
+      var official = (doc.indexOf('타부서') >= 0 || doc.indexOf('대외') >= 0);
+      if (official){
+        return '공문 갑지 서식으로 작성해 주세요. 제목 → 「1. 관련: [근거 공문·계획]」 → 「2. 위 호와 관련하여 ~ 협조 요청드립니다」 → 「가. ~ / 나. ~」 세부사항 → 「붙임  1. ~ 1부.」 순서로 두고, 문서 마지막은 「끝.」으로 닫아 주세요. 문장은 「~바랍니다」·「~요청드립니다」로 끝맺고, 요청 사항에는 기한·제출 형식·담당 연락처를 한 줄로 특정해 주세요.';
+      }
+      if (doc){
+        return '개조식 보고서로 작성해 주세요. □ 대제목 → ㅇ 중항목 → - 세부내용 순으로 내려가고, 문장은 「~함 / ~임 / ~예정 / ~필요」로 끝맺어 주세요. 본문은 추진배경(관련 규정·상위계획) → 현황 및 문제점 → 검토내용(대안 비교) → 추진계획(소요예산·일정·전결권 확인) → 행정사항 순서로 잡아 주세요.';
+      }
+      return '본문은 결론 → 근거 → 추진계획(소요예산·일정·전결권) → 행정사항 순서로 잡고, 한 문단은 3줄을 넘기지 않게 해 주세요.';
+    }
+    if (key === 'mail'){
+      return '제목 1개와 본문(인사 → 상황·사유 → 요청 사항(기한·형식 명시) → 마무리 인사)으로 구성해 주세요. 같은 내용을 메신저·유선 후속용 3~5문장 축약본으로도 주고, 공문으로 보낼 때는 수신처·결재선을 표기해 주세요.';
+    }
+    if (key === 'excel'){
+      return '답은 ① 바로 쓸 수식·코드 → ② 붙여 넣을 위치와 방법 → ③ 예상 결과 → ④ 흔한 오류와 대처 순서로 주세요. 코드는 복사 가능한 코드 블록으로 주고, 시트명·범위는 예시로 밝혀 주세요. 집계 결과는 원본 5행 정도로 손계산해 확인할 수 있게 근거를 함께 주세요.';
+    }
+    return '① 한 줄 결론 ② 핵심 요약 ③ 표(항목/담당/기한) ④ 리스크·확인 필요 사항 순서로 정리하고, 원문에 없는 추론은 넣지 말고 확인이 필요한 부분만 따로 표시해 주세요.';
+  }
+
+  function styleText(key, a){
+    if (key === 'report'){
+      var t = a.tone || '';
+      if (t.indexOf('개조식') >= 0) return '문체는 공공기관 개조식으로, 감정·추측을 빼고 사실과 수치만 남겨 항목마다 한 줄로 끝맺어 주세요.';
+      if (t.indexOf('비교표') >= 0) return '검토 내용은 비용·기간·리스크·근거 규정을 열로 둔 대안 비교표로 정리하고, 결론은 표 아래 3줄 이내로 써 주세요.';
+      if (t.indexOf('서술형') >= 0) return '각 항목 아래에 근거와 경위를 2~3문장으로 풀어 써서, 처음 받는 부서도 이해할 수 있게 해 주세요.';
+      return '문체는 간결한 실무 문체로, 한 문단 3줄을 넘기지 않게 해 주세요.';
+    }
+    if (key === 'mail'){
+      var m = a.tone || '';
+      if (m.indexOf('단호') >= 0) return '말투는 격식 있고 단호하게, 결론과 요청을 첫 문단에 두세요.';
+      if (m.indexOf('부드럽') >= 0) return '말투는 부드럽고 유연하게, 상대의 사정을 먼저 인정한 뒤 요청을 두세요.';
+      if (m.indexOf('짧고') >= 0) return '말투는 짧고 핵심만, 3문장 안에 요청과 기한만 남기세요.';
+      return '말투는 정중하고 군더더기 없이, 결론과 요청이 한 번에 읽히게 써 주세요.';
+    }
+    if (key === 'excel'){
+      var d = a.depth || '';
+      if (d.indexOf('초보자') >= 0) return '설명은 초보자가 복사·붙여넣기만 해도 되도록 단계별로 써 주세요.';
+      if (d.indexOf('원리') >= 0) return '왜 그렇게 되는지 원리도 한두 줄로 설명해 주세요.';
+      return '설명은 필요한 만큼만, 복사해서 바로 쓸 수 있는 형태로 주세요.';
+    }
+    var l = a.len || '';
+    if (l.indexOf('반 페이지') >= 0) return '분량은 임원 보고용 반 페이지로 줄여 주세요.';
+    if (l.indexOf('상세') >= 0) return '분량은 실무자가 바로 실행할 수 있게 충분히 상세히 정리해 주세요.';
+    return '분량은 보고 한 장 안쪽으로 줄여 주세요.';
+  }
+
+  function docRuleText(key, a){
+    if (key !== 'report') return '';
+    var doc = a.doc || '';
+    var goal = a.goal || '';
+    var arr = [];
+    if (doc.indexOf('감사') >= 0 || doc.indexOf('의회') >= 0){
+      arr.push('감정·변명·추측을 빼고 사실 → 수치 → 원인 → 개선대책(이행기한·담당) 순으로만 쓰고, 요구 범위 밖 자료는 넣지 마세요.');
+      arr.push('요구 항목별로 답변을 1:1로 맞추고, 산출할 수 없는 항목은 사유와 대체 자료를 함께 표시해 주세요.');
+    }
+    if (doc.indexOf('계약') >= 0 || doc.indexOf('발주') >= 0){
+      arr.push('계약 방식(수의/경쟁)과 근거 조항, 사전 절차(방침 수립 → 계약심사 → 일상감사) 이행 여부, 과업·규격·예산 변경 시 절차와 결재선을 밝히고, 분할 발주·규격 변경·부당 수의처럼 지적 소지가 있는 부분은 근거와 함께 먼저 설명해 주세요.');
+    }
+    if (doc.indexOf('내부결재') >= 0 || doc.indexOf('방침') >= 0){
+      arr.push('결재선은 기안자 → 검토자 → 결재권자 순으로 판단 근거가 이어지게 쓰고, 전결권자와 전결 범위를 표시해 주세요.');
+    }
+    if (goal.indexOf('예산 방어') >= 0){
+      arr.push('추가 소요액과 외주·민간 위탁 같은 대체안 비용을 같은 기준으로 나란히 제시하고, 절감·회피 효과를 숫자로 밝혀 주세요.');
+    }
+    if (goal.indexOf('신규 승인') >= 0){
+      arr.push('무엇을·언제까지·얼마로 승인받으려는지 첫 세 줄에 밝히고, 승인되지 않을 때 일정·민원·안전에 생길 영향을 함께 적어 주세요.');
+    }
+    if (goal.indexOf('현황') >= 0){
+      arr.push('계획 대비 실적을 같은 기준으로 비교하고, 미달 항목은 원인과 보완 계획까지 붙여 주세요.');
+    }
+    if (goal.indexOf('규정') >= 0){
+      arr.push('적용 조항과 기준일을 먼저 밝히고, 상위 규정·개정 여부와 충돌하는 부분은 따로 표시해 주세요.');
+    }
+    return arr.join(' ');
+  }
+
+  function checkText(key, p, a, job){
+    if (!job) return '';
     var parts = [];
-    blocks.forEach(function(b){
-      if (!b.lines.length) return;
-      var body = b.bullets
-        ? b.lines.map(function(l){ return '- ' + l; }).join('\n')
-        : b.lines.join('\n');
-      parts.push(b.label + '\n' + body);
-    });
-    return parts.join('\n\n');
+    parts.push('특히 ' + objList(job.points) + ' 기준으로 판단해 주세요.');
+    if (a.task){
+      var f = TASK_FOCUS[a.task];
+      if (f){
+        parts.push('그중 「' + a.task + '」 업무에 해당하니, ' + f.label + ' 관점에서 ' + f.need);
+      } else if (TASK_NOTES[a.task]){
+        parts.push('그중 「' + a.task + '」 업무에 해당하니, ' + TASK_NOTES[a.task]);
+      }
+    }
+    return parts.join(' ');
+  }
+
+  function limitText(key){
+    if (key !== 'report') return '';
+    return '분량은 A4 1~2장, 한 문단 3줄 이내, 표는 5열 이내로 해 주세요. 인용한 규정·통계·기준일은 문장 끝에 괄호로 출처와 기준일을 적어 주세요.';
+  }
+
+  function rulesText(){
+    var arr = [];
+    GUARDS.forEach(function(g){ if (state.guards[g.id]) arr.push(g.rule); });
+    if (!arr.length) return '';
+    return '다음 원칙은 반드시 지켜 주세요. ' + arr.join(' ');
+  }
+
+  function contextText(){
+    var lines = memoLines();
+    if (!lines.length) return '';
+    return '상황은 다음과 같습니다.\n' + lines.join('\n');
+  }
+
+  /* 문단 목록으로 완성 프롬프트를 만든다 */
+  function buildSegments(){
+    if (!state.purpose) return [];
+    var key = state.purpose;
+    var p = PURPOSES[key];
+    var a = state.answers;
+    var job = (a.job && JOBS[a.job]) ? JOBS[a.job] : null;
+    var out = [];
+
+    out.push({ key:'role', text: roleText(p, job) });
+    out.push({ key:'request', text: requestText(key, p, a) });
+
+    var ctx = contextText();
+    if (ctx) out.push({ key:'context', text: ctx });
+
+    out.push({ key:'format', text: formatText(key, p, a) });
+
+    var st = styleText(key, a);
+    if (st) out.push({ key:'style', text: st });
+
+    var dr = docRuleText(key, a);
+    if (dr) out.push({ key:'docrule', text: dr });
+
+    var ck = checkText(key, p, a, job);
+    if (ck) out.push({ key:'check', text: ck });
+
+    var lm = limitText(key);
+    if (lm) out.push({ key:'limit', text: lm });
+
+    var rl = rulesText();
+    if (rl) out.push({ key:'rule', text: rl });
+
+    return out;
+  }
+
+  function promptText(){
+    if (editing) return els.pwTextarea.value || '';
+    var out = [];
+    segs.forEach(function(s){ out.push(s.text); });
+    return out.join('\n\n');
   }
 
   /* =======================================================
-     6. 그리기 2 — 오른쪽 미리보기
+     6. 그리기 2 — 실시간 타이핑 에디터
      ======================================================= */
 
-  function renderBlocks(blocks, modes){
-    els.blocks.innerHTML = '';
-    blocks.forEach(function(b){
-      var wrap = h('div', 'blk');
-      wrap.setAttribute('data-blk', b.key);
-      wrap.style.setProperty('--c', b.c);
-      wrap.style.setProperty('--tint', b.tint);
-      if (!b.lines.length) wrap.classList.add('blk--empty');
-
-      var head = h('div', 'blk-head');
-      head.appendChild(h('span', 'blk-label', b.label));
-      if (b.lines.length){
-        head.appendChild(h('span', 'blk-flag', '반영됨'));
-      } else {
-        head.appendChild(h('span', 'blk-wait', '대기'));
-      }
-      wrap.appendChild(head);
-
-      var body = h('div', 'blk-body');
-      if (b.lines.length){
-        b.lines.forEach(function(line){
-          body.appendChild(h('div', b.bullets ? 'blk-line is-bullet' : 'blk-line', line));
-        });
-      } else {
-        body.appendChild(h('p', 'blk-ph', b.ph));
-      }
-      wrap.appendChild(body);
-
-      if (modes[b.key] === 'flash') wrap.classList.add('flash');
-      if (modes[b.key] === 'enter') wrap.classList.add('enter');
-
-      els.blocks.appendChild(wrap);
-    });
+  function commonPrefix(a, b){
+    var n = Math.min(a.length, b.length);
+    var i = 0;
+    while (i < n && a.charAt(i) === b.charAt(i)) i++;
+    return i;
   }
 
-  function computeStats(blocks){
-    var ready = 0;
-    blocks.forEach(function(b){ if (b.lines.length) ready++; });
+  function ensureCaret(){
+    if (caretEl) return caretEl;
+    caretEl = document.createElement('span');
+    caretEl.className = 'pw-caret';
+    caretEl.setAttribute('aria-hidden', 'true');
+    return caretEl;
+  }
 
-    if (!state.purpose){
-      return { pct:0, ready:ready, label:'시작 전' };
+  function lastTyping(){
+    var found = null;
+    for (var i = 0; i < typingKeys.length; i++){
+      var k = typingKeys[i];
+      if ((shown[k] || 0) < (segText[k] || '').length) found = k;
     }
+    return found;
+  }
+
+  function placeCaret(){
+    if (!caretEl || !segs.length) return;
+    var key = activeKey;
+    if (!key || !segNodes[key]) key = segs[segs.length - 1].key;
+    var node = segNodes[key];
+    if (node) node.appendChild(caretEl);
+  }
+
+  function paintSeg(k){
+    var node = segNodes[k];
+    if (!node) return;
+    var t = segText[k] || '';
+    var n = shown[k];
+    if (n === undefined) n = 0;
+    var from = fromIdx[k];
+    if (from === undefined || from > n) from = n;
+
+    var head = t.slice(0, n);
+    node.innerHTML = '';
+    var plain = head.slice(0, from);
+    var mark = head.slice(from);
+    if (plain) node.appendChild(document.createTextNode(plain));
+    if (mark){
+      var m = document.createElement('mark');
+      m.className = 'pw-mark';
+      m.textContent = mark;
+      node.appendChild(m);
+    }
+  }
+
+  function paintAll(){
+    segs.forEach(function(s){ paintSeg(s.key); });
+    placeCaret();
+  }
+
+  function startStream(maxLen){
+    stopStream();
+    streamActive = true;
+    streamChunk = Math.max(1, Math.ceil(maxLen / FRAMES));
+    if (streamChunk > MAX_CHUNK) streamChunk = MAX_CHUNK;
+    activeKey = lastTyping();
+    if (ensureCaret()) caretEl.classList.add('is-writing');
+    paintStatus();
+    // 첫 글자는 곧바로 찍고, 나머지를 타이핑한다 (빈 창이 깜박이지 않게)
+    streamTick();
+  }
+
+  function streamTick(){
+    streamTimer = null;
+    var done = true;
+    for (var i = 0; i < typingKeys.length; i++){
+      var k = typingKeys[i];
+      var t = segText[k] || '';
+      if ((shown[k] || 0) < t.length){
+        shown[k] = Math.min(t.length, (shown[k] || 0) + streamChunk);
+        paintSeg(k);
+      }
+      if ((shown[k] || 0) < t.length) done = false;
+    }
+    activeKey = lastTyping();
+    if (done){
+      typingKeys = [];
+      streamActive = false;
+      activeKey = null;
+      if (caretEl) caretEl.classList.remove('is-writing');
+      placeCaret();
+      paintStatus();
+      syncPrompt();
+      fadeMarks();
+      announce();
+    } else {
+      placeCaret();
+      paintStatus();
+      streamTimer = window.setTimeout(streamTick, TICK);
+    }
+  }
+
+  function finishStream(){
+    if (streamTimer) { window.clearTimeout(streamTimer); streamTimer = null; }
+    for (var i = 0; i < typingKeys.length; i++){
+      shown[typingKeys[i]] = (segText[typingKeys[i]] || '').length;
+    }
+    typingKeys = [];
+    streamActive = false;
+    activeKey = null;
+    if (caretEl) caretEl.classList.remove('is-writing');
+    paintAll();
+    paintStatus();
+    fadeMarks();
+    syncPrompt();
+  }
+
+  function stopStream(){
+    if (streamTimer) { window.clearTimeout(streamTimer); streamTimer = null; }
+    streamActive = false;
+  }
+
+  function fadeMarks(){
+    window.setTimeout(function(){
+      if (streamActive || !els.pwEditor) return;
+      var marks = els.pwEditor.querySelectorAll('.pw-mark');
+      for (var i = 0; i < marks.length; i++) marks[i].classList.add('is-faded');
+    }, 900);
+  }
+
+  function announce(){
+    els.liveStatus.textContent = '프롬프트가 갱신되었습니다. ' + segs.length + '문단 ' + displayedLength() + '자.';
+  }
+
+  function displayedLength(){
+    if (editing) return (els.pwTextarea.value || '').length;
+    var n = 0;
+    segs.forEach(function(s){ n += (shown[s.key] || 0); });
+    return n;
+  }
+
+  /* 목표 문단과 화면을 맞춘다 — 바뀐 문단만 새로 타이핑된다 */
+  function syncEditor(){
+    var changed = [];
+    var keep = {};
+    segs.forEach(function(s){ keep[s.key] = 1; });
+
+    Object.keys(segNodes).forEach(function(k){
+      if (keep[k]) return;
+      var node = segNodes[k];
+      if (node.parentNode) node.parentNode.removeChild(node);
+      delete segNodes[k];
+      delete segText[k];
+      delete shown[k];
+      delete fromIdx[k];
+    });
+
+    var maxLen = 0;
+    typingKeys = [];
+
+    segs.forEach(function(s, i){
+      var node = segNodes[s.key];
+      if (!node){
+        node = document.createElement('p');
+        node.className = 'pw-seg';
+        node.setAttribute('data-seg', s.key);
+        segNodes[s.key] = node;
+        segText[s.key] = null;
+      }
+      var at = els.pwEditor.children[i] || null;
+      if (at !== node) els.pwEditor.insertBefore(node, at);
+
+      var target = s.text || '';
+      var old = segText[s.key];
+
+      if (old === null || old === undefined){
+        shown[s.key] = 0;
+        fromIdx[s.key] = 0;
+        changed.push(s.key);
+      } else if (old !== target){
+        var cp = commonPrefix(old, target);
+        fromIdx[s.key] = cp;
+        shown[s.key] = cp;
+        changed.push(s.key);
+      } else {
+        fromIdx[s.key] = 0;
+        if (shown[s.key] === undefined || shown[s.key] > target.length) shown[s.key] = target.length;
+      }
+
+      segText[s.key] = target;
+
+      if (INSTANT[s.key]) shown[s.key] = target.length;
+      if (shown[s.key] === undefined) shown[s.key] = 0;
+      if (shown[s.key] < target.length){
+        typingKeys.push(s.key);
+        if (target.length - shown[s.key] > maxLen) maxLen = target.length - shown[s.key];
+      }
+      paintSeg(s.key);
+    });
+
+    if (typingKeys.length){
+      startStream(maxLen);
+    } else {
+      streamActive = false;
+      activeKey = null;
+      if (caretEl) caretEl.classList.remove('is-writing');
+      placeCaret();
+      paintStatus();
+      syncPrompt();
+    }
+    return changed;
+  }
+
+  function clearEditor(){
+    stopStream();
+    segs = [];
+    segText = {};
+    shown = {};
+    fromIdx = {};
+    segNodes = {};
+    typingKeys = [];
+    activeKey = null;
+    if (caretEl && caretEl.parentNode) caretEl.parentNode.removeChild(caretEl);
+    if (els.pwEditor) els.pwEditor.innerHTML = '';
+  }
+
+  function paintStatus(){
+    if (!els.pwStatus) return;
+    els.pwStatus.classList.remove('is-typing');
+    els.pwStatus.classList.remove('is-done');
+    if (els.pwDot) els.pwDot.classList.remove('is-typing');
+
+    var label;
+    if (!state.purpose){
+      label = '대기';
+    } else if (editing){
+      label = '직접 수정 중';
+    } else if (streamActive){
+      label = '실시간 프롬프트 생성 중…';
+      els.pwStatus.classList.add('is-typing');
+      if (els.pwDot) els.pwDot.classList.add('is-typing');
+    } else {
+      label = '작성 완료';
+      els.pwStatus.classList.add('is-done');
+    }
+    els.pwStatus.textContent = label;
+    if (els.pwMeta) els.pwMeta.textContent = state.purpose ? (segs.length + '문단 · ' + displayedLength() + '자') : '';
+  }
+
+  function syncPrompt(){
+    currentPrompt = promptText();
+    els.copyBtn.disabled = !state.purpose;
+    els.gptBtn.setAttribute('href', state.purpose ? 'https://chatgpt.com/?q=' + encodeURIComponent(currentPrompt) : '#');
+    els.gptBtn.classList.toggle('is-off', !state.purpose);
+  }
+
+  function settleText(){
+    if (streamActive) finishStream();
+    currentPrompt = promptText();
+    return currentPrompt;
+  }
+
+  function computeStats(){
+    if (!state.purpose) return { pct:0, label:'시작 전' };
 
     var s = 25;
     var qs = PURPOSES[state.purpose].questions;
@@ -1361,8 +1795,7 @@ body.sheet-open{overflow:hidden}
     });
     s += Math.round(qScore);
 
-    var m = state.memo.trim();
-    if (m.length > 0) s += 15;
+    if (state.memo.trim().length > 0) s += 15;
 
     var g = 0;
     GUARDS.forEach(function(x){ if (state.guards[x.id]) g++; });
@@ -1375,19 +1808,7 @@ body.sheet-open{overflow:hidden}
       : s >= 55 ? '거의 다 됐어요'
       : '조립 중';
 
-    return { pct:s, ready:ready, label:label };
-  }
-
-  function renderBadges(blocks){
-    els.blockBadges.innerHTML = '';
-    blocks.forEach(function(b){
-      var btn = h('button', 'blk-badge' + (b.lines.length ? ' is-ready' : ''));
-      btn.type = 'button';
-      btn.setAttribute('data-goto', b.key);
-      btn.appendChild(h('i'));
-      btn.appendChild(document.createTextNode(b.name));
-      els.blockBadges.appendChild(btn);
-    });
+    return { pct:s, label:label };
   }
 
   function renderTips(){
@@ -1414,13 +1835,15 @@ body.sheet-open{overflow:hidden}
     els.tipsPanel.classList.toggle('is-open', desktopTipsOpen);
   }
 
+  function stateSig(){
+    return state.purpose + '|' + JSON.stringify(state.answers) + '|' + state.memo + '|' + JSON.stringify(state.guards);
+  }
+
   function render(){
     var p = state.purpose ? PURPOSES[state.purpose] : null;
 
-    // Step 2 문구
     els.step2Sub.textContent = p ? p.lead : '용도를 먼저 골라 주세요.';
 
-    // Step 2 질문은 용도가 바뀔 때만 다시 그린다 (입력 중 포커스 유지)
     if (renderedPurpose !== state.purpose || questionsDirty){
       var keepsMemo = els.memo.value;
       buildQuestions();
@@ -1433,57 +1856,41 @@ body.sheet-open{overflow:hidden}
     syncGuards();
     syncChips();
 
-    var blocks = buildBlocks();
-    var modes = {};
+    var changed = [];
 
     if (!p){
       els.emptyState.hidden = false;
-      els.blocks.hidden = true;
-      els.blocks.innerHTML = '';
-      prevSig = {};
+      els.promptDoc.hidden = true;
+      els.pwTextarea.hidden = true;
+      els.pwEditor.hidden = false;
+      els.pwFoot.hidden = true;
+      clearEditor();
+      currentPrompt = '';
     } else {
       els.emptyState.hidden = true;
-      els.blocks.hidden = false;
-      blocks.forEach(function(b){
-        var sig = b.lines.join('\u0001') + '|' + (b.bullets ? '1' : '0');
-        if (!(b.key in prevSig)) modes[b.key] = 'enter';
-        else if (prevSig[b.key] !== sig) modes[b.key] = 'flash';
-        prevSig[b.key] = sig;
-      });
-      renderBlocks(blocks, modes);
-
-      // 모바일: 방금 바뀐 블록이 상단 sticky 미리보기 안에서 눈앞에 오도록 자동 스크롤
-      var focusKey = null;
-      blocks.forEach(function(b){ if (modes[b.key] === 'flash') focusKey = b.key; });
-      if (focusKey) focusChangedBlock(focusKey);
+      els.promptDoc.hidden = false;
+      segs = buildSegments();
+      if (editing){
+        els.pwFoot.hidden = (stateSig() === editSig);
+      } else {
+        changed = syncEditor();
+      }
     }
 
-    currentPrompt = promptFromBlocks(blocks);
+    if (els.pwHint) els.pwHint.hidden = !(p && !editing && memoLines().length === 0);
 
-    var stats = computeStats(blocks);
-
-    // 게이지
+    var stats = computeStats();
     els.pctNum.textContent = String(stats.pct);
     els.gaugeFill.style.width = stats.pct + '%';
     els.pctLabel.textContent = stats.label;
     els.pctLabel.classList.toggle('is-done', stats.pct >= 100);
 
-    // 블록 배지 / 개수
-    renderBadges(blocks);
-    els.blockCount.textContent = stats.ready + '/5 블록';
-    els.blockCount.classList.toggle('is-full', stats.ready === 5);
-
-    // 복사 / 챗GPT
-    els.copyBtn.disabled = !p;
-    els.copyBtn.textContent = '📋 1클릭 복사';
-    els.copyBtn.dataset.mode = 'copy';
-    els.gptBtn.setAttribute('href', p ? 'https://chatgpt.com/?q=' + encodeURIComponent(currentPrompt) : '#');
-    els.gptBtn.classList.toggle('is-off', !p);
-
-    // 후속 팁
+    paintStatus();
+    syncPrompt();
     renderTips();
 
-    // 모바일 바
+    if (changed.length && p) focusTypingSeg(changed[0]);
+
     if (stats.pct !== prevPct){
       prevPct = stats.pct;
       els.mobileBar.classList.remove('bump');
@@ -1492,18 +1899,7 @@ body.sheet-open{overflow:hidden}
     }
     els.mbPct.textContent = stats.pct + '%';
     els.mbFill.style.width = stats.pct + '%';
-    els.mbSub.textContent = p ? (stats.ready + '/5 블록 · ' + stats.pct + '% · 눌러서 전체 보기') : '칩을 누르면 실시간으로 조립돼요';
-
-    // 방금 바뀐 블록 안내 (스크린리더)
-    var changed = Object.keys(modes).filter(function(k){ return modes[k] === 'flash'; });
-    if (changed.length){
-      var names = changed.map(function(k){
-        var found = '';
-        blocks.forEach(function(b){ if (b.key === k) found = b.name; });
-        return found;
-      }).join(', ');
-      els.liveStatus.textContent = names + ' 블록이 업데이트되었습니다.';
-    }
+    els.mbSub.textContent = p ? (stats.pct + '% · 눌러서 전체 보기') : '칩을 누르면 문장이 실시간으로 써져요';
   }
 
   function scheduleRender(){
@@ -1527,11 +1923,11 @@ body.sheet-open{overflow:hidden}
 
     state.purpose = key;
     state.answers = {};
+    if (editing) setEditing(false);
     render();
     els.liveStatus.textContent = PURPOSES[key].title + ' 용도가 선택되었습니다.';
 
     if (window.matchMedia('(max-width: 1024px)').matches){
-      // 질문이 바로 보이도록 스텝2로 부드럽게 이동
       var q = els.questions;
       if (q && q.scrollIntoView) q.scrollIntoView({ behavior:'smooth', block:'center' });
     }
@@ -1555,7 +1951,6 @@ body.sheet-open{overflow:hidden}
     else state.answers[key] = val;
 
     if (key === 'job'){
-      // 직무가 바뀌면 그 직무에 없는 세부 업무는 지운다
       var jsel = state.answers.job ? JOBS[state.answers.job] : null;
       if (state.answers.task && (!jsel || jsel.tasks.indexOf(state.answers.task) < 0)) delete state.answers.task;
       questionsDirty = true;
@@ -1613,13 +2008,67 @@ body.sheet-open{overflow:hidden}
     autoGrow();
 
     desktopTipsOpen = false;
-    renderedPurpose = '__none__'; // 강제로 다시 그리기
+    if (editing) setEditing(false);
+    clearEditor();
+    renderedPurpose = '__none__';
     render();
     toast('처음 상태로 돌아갔어요.');
   });
 
   /* =======================================================
-     8. 동작 — 복사 / 챗GPT / 후속 팁 / 시트
+     8. 동작 — 직접 수정
+     ======================================================= */
+
+  function setEditing(on){
+    if (on && !state.purpose){
+      toast('먼저 용도를 골라 주세요.');
+      return;
+    }
+    if (on && streamActive) finishStream();
+
+    var base = promptText();   // 수정 모드로 바꾸기 전의 완성 프롬프트
+    editing = !!on;
+    els.pwEditor.hidden = editing;
+    els.pwTextarea.hidden = !editing;
+    els.pwEdit.setAttribute('aria-pressed', editing ? 'true' : 'false');
+    els.pwEdit.textContent = editing ? '↺ 자동 생성' : '✎ 직접 수정';
+
+    if (editing){
+      els.pwTextarea.value = base;
+      editSig = stateSig();
+      els.pwFoot.hidden = true;
+      els.pwHint.hidden = true;
+      els.pwTextarea.focus();
+    } else {
+      els.pwFoot.hidden = true;
+    }
+    paintStatus();
+    syncPrompt();
+  }
+
+  els.pwEdit.addEventListener('click', function(){
+    if (editing){
+      setEditing(false);
+      render();
+      toast('자동 생성본으로 돌아왔어요.');
+    } else {
+      setEditing(true);
+    }
+  });
+
+  els.pwTextarea.addEventListener('input', function(){
+    syncPrompt();
+    paintStatus();
+  });
+
+  els.pwRebuild.addEventListener('click', function(){
+    setEditing(false);
+    render();
+    toast('선택한 내용으로 다시 썼어요.');
+  });
+
+  /* =======================================================
+     9. 동작 — 복사 / 챗GPT / 후속 팁 / 시트
      ======================================================= */
 
   function toast(msg){
@@ -1663,11 +2112,12 @@ body.sheet-open{overflow:hidden}
   }
 
   els.copyBtn.addEventListener('click', function(){
-    if (!currentPrompt){
+    var text = settleText();
+    if (!text){
       toast('먼저 용도를 골라 주세요.');
       return;
     }
-    copyText(currentPrompt).then(function(ok){
+    copyText(text).then(function(ok){
       if (ok){
         els.copyBtn.textContent = '✅ 복사 완료';
         els.copyBtn.dataset.mode = 'done';
@@ -1679,24 +2129,25 @@ body.sheet-open{overflow:hidden}
           }
         }, 1800);
       } else {
-        toast('복사가 막힌 환경이에요. 미리보기 본문을 직접 선택해 주세요.');
+        toast('복사가 막힌 환경이에요. 프롬프트를 직접 선택해 주세요.');
       }
     });
   });
 
   els.gptBtn.addEventListener('click', function(ev){
-    if (!currentPrompt){
+    var text = settleText();
+    if (!text){
       ev.preventDefault();
       toast('먼저 용도를 골라 주세요.');
       return;
     }
     // 너무 긴 프롬프트는 주소창 길이 제한에 걸리므로, 복사해 두고 챗GPT만 연다
-    if (('https://chatgpt.com/?q=' + encodeURIComponent(currentPrompt)).length > 1900){
+    if (('https://chatgpt.com/?q=' + encodeURIComponent(text)).length > 1900){
       ev.preventDefault();
-      copyText(currentPrompt).then(function(ok){
+      copyText(text).then(function(ok){
         toast(ok
           ? '프롬프트가 길어 복사해 뒀어요. 열리는 챗GPT에 붙여 넣어 주세요.'
-          : '프롬프트가 길어요. 미리보기 본문을 직접 복사해 주세요.');
+          : '프롬프트가 길어요. 본문을 직접 복사해 주세요.');
         window.open('https://chatgpt.com/', '_blank', 'noopener');
       });
     }
@@ -1723,19 +2174,10 @@ body.sheet-open{overflow:hidden}
     });
   });
 
-  els.blockBadges.addEventListener('click', function(ev){
-    var btn = ev.target.closest('[data-goto]');
-    if (!btn) return;
-    var key = btn.getAttribute('data-goto');
-    var target = els.blocks.querySelector('[data-blk="' + key + '"]');
-    if (!target) return;
-    target.scrollIntoView({ behavior:'smooth', block:'nearest' });
-    target.classList.remove('flash');
-    void target.offsetWidth;
-    target.classList.add('flash');
-  });
+  /* =======================================================
+     10. 모바일 — 상단 sticky 카드 + 전체 보기 시트
+     ======================================================= */
 
-  // 모바일: 상단 sticky 미리보기 카드 + 전체 보기 시트
   var mCollapsed = false;
 
   function isMobileView(){
@@ -1746,8 +2188,8 @@ body.sheet-open{overflow:hidden}
     if (!document.querySelector || !document.documentElement) return;
     var tb = document.querySelector('.topbar');
     if (!tb) return;
-    var h = tb.offsetHeight || 56;
-    document.documentElement.style.setProperty('--topbar-h', h + 'px');
+    var hh = tb.offsetHeight || 56;
+    document.documentElement.style.setProperty('--topbar-h', hh + 'px');
   }
 
   function setCollapsed(v){
@@ -1757,12 +2199,12 @@ body.sheet-open{overflow:hidden}
     els.mToggle.setAttribute('aria-expanded', mCollapsed ? 'false' : 'true');
   }
 
-  // 방금 바뀐 블록을 상단 미리보기 안에서 부드럽게 끌어온다
-  function focusChangedBlock(key){
+  // 방금 바뀐 문단을 상단 미리보기 안에서 눈앞에 오도록 끌어온다
+  function focusTypingSeg(key){
     if (!key || !isMobileView()) return;
     if (document.body.classList.contains('sheet-open')) return;
     if (els.previewCol.classList.contains('is-collapsed')) return;
-    var target = els.blocks.querySelector('[data-blk="' + key + '"]');
+    var target = els.pwEditor.querySelector('[data-seg="' + key + '"]');
     if (!target || !els.promptBody) return;
     var top;
     if (els.promptBody.getBoundingClientRect && target.getBoundingClientRect){
@@ -1806,7 +2248,7 @@ body.sheet-open{overflow:hidden}
   });
 
   /* =======================================================
-     9. 시작
+     11. 시작
      ======================================================= */
 
   buildPurposes();
