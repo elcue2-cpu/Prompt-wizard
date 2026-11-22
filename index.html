@@ -1697,21 +1697,24 @@ body.sheet-open{overflow:hidden}
 
       if (old === null || old === undefined){
         shown[s.key] = 0;
-        fromIdx[s.key] = 0;
+        fromIdx[s.key] = 0;             // 새 문단은 처음부터 써 내려가며 하이라이트
         changed.push(s.key);
       } else if (old !== target){
         var cp = commonPrefix(old, target);
-        fromIdx[s.key] = cp;
+        fromIdx[s.key] = cp;            // 앞부분은 그대로, 달라진 곳부터 하이라이트
         shown[s.key] = cp;
         changed.push(s.key);
       } else {
-        fromIdx[s.key] = 0;
-        if (shown[s.key] === undefined || shown[s.key] > target.length) shown[s.key] = target.length;
+        shown[s.key] = target.length;
+        fromIdx[s.key] = target.length; // 그대로인 문단은 하이라이트 없음
       }
 
       segText[s.key] = target;
 
-      if (INSTANT[s.key]) shown[s.key] = target.length;
+      if (INSTANT[s.key]){
+        shown[s.key] = target.length;
+        fromIdx[s.key] = target.length; // 메모는 매 타자마다 통째로 반짝이지 않게
+      }
       if (shown[s.key] === undefined) shown[s.key] = 0;
       if (shown[s.key] < target.length){
         typingKeys.push(s.key);
