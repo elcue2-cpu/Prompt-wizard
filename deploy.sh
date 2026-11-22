@@ -30,7 +30,8 @@ echo "== 3. v4.0 태그 =="
 if git rev-parse -q --verify refs/tags/v4.0 >/dev/null; then
   echo "v4.0 태그가 이미 있습니다."
 else
-  git tag -a v4.0 -m "Prompt Wizard v4.0 — 4단계 위자드·품질 점검·즐겨찾기·SEO 랜딩"
+  git -c user.name=elcue2-cpu -c user.email=elcue2-cpu@users.noreply.github.com \
+      tag -a v4.0 -m "Prompt Wizard v4.0 — 4단계 위자드·품질 점검·즐겨찾기·SEO 랜딩"
   git push origin v4.0
 fi
 
