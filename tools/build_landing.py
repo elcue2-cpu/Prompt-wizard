@@ -337,15 +337,11 @@ def render(p):
         '<article class="card-mini"><h3>%s</h3><p>%s</p></article>' % (esc(t), esc(d))
         for t, d in p['solves'])
     steps = '\n        '.join(
-        '<li><b>%d. %s</b><p>%s</p></li>' % (i + 1, esc(t), esc(d))
-        for i, (t, d) in enumerate(p['steps']))
+        '<li><b>%s</b><p>%s</p></li>' % (esc(t), esc(d))
+        for t, d in p['steps'])
     faq = '\n        '.join(
         '<details class="faq"><summary>%s</summary><p>%s</p></details>' % (esc(q), esc(a))
         for q, a in p['faq'])
-    related = '\n      '.join(
-        '<li><a href="%s.html">%s</a></li>' % (esc(s),
-                                               esc(next(x for x in PAGES if x['slug'] == s)['nav']))
-        for s in p['related'])
     lead = '\n      '.join('<p>%s</p>' % esc(t) for t in p['lead'])
     cta_label = esc(p['cta'][0])
     href = esc(cta_href(p))
@@ -436,9 +432,6 @@ def render(p):
 
     <section>
       <h2>관련 도구</h2>
-      <ul class="lp-related">
-        {related}
-      </ul>
       <p class="lp-links">
       {tool_links(p)}
       </p>

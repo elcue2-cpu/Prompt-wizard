@@ -853,9 +853,7 @@ window.PW = window.PW || {};
     if (!isLive() || !state.out) { PW.editor.toast('먼저 결과물을 골라 주세요.'); return; }
     var text = PW.editor.settle();
     if (!text) { PW.editor.toast('프롬프트가 아직 비어 있어요.'); return; }
-    var o = currentOutput();
     var title = labelOfSelect(fullSelection()) + ' · ' + fmtDate(Date.now());
-    if (o && o.short) title = o.short + ' · ' + title;
     var rec = PW.store.addFavorite({ title: title, body: text, sel: fullSelection() });
     renderShelf();
     PW.editor.toast(rec ? '즐겨찾기에 저장했어요(이 브라우저에만).' : '저장 공간이 막혀 저장하지 못했어요.');
