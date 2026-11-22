@@ -11,7 +11,8 @@ window.PW = window.PW || {};
   var MAX = 20;
 
   /* 출력 형식을 정하는 칩들 — 결과물마다 이름이 다르지만 뜻은 같다 */
-  var FORMAT_KEYS = ['tone', 'length', 'kind', 'mailTone', 'len', 'depth', 'deliverable', 'cForm', 'include', 'exclude'];
+  var FORMAT_KEYS = ['tone', 'length', 'kind', 'mailTone', 'len', 'depth', 'deliverable', 'cForm', 'include', 'exclude',
+    'formUse', 'formCols', 'formRows', 'xDecide', 'xReply', 'xExpect', 'xBasis', 'xFmt', 'xChoice', 'xUse'];
 
   function memoStats(memo) {
     var lines = String(memo || '').split('\n').map(function (s) { return s.trim(); })

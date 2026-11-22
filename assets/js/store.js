@@ -11,6 +11,8 @@ window.PW = window.PW || {};
 
   var KEY_RECENT = 'pw.v4.recent';
   var KEY_FAV = 'pw.v4.fav';
+  var KEY_SCHEMA = 'pw.v4.schema';
+  var SCHEMA = 2;
   var RECENT_MAX = 10;
   var FAV_MAX = 50;
 
@@ -133,6 +135,31 @@ window.PW = window.PW || {};
     return [];
   }
 
+  /* ---- schema 2 마이그레이션 도우미 (별칭 치환은 app이 한다) ---- */
+
+  function schema() {
+    var ls = backend();
+    if (!ls) return 0;
+    var raw = null;
+    try { raw = ls.getItem(KEY_SCHEMA); } catch (e) { return 0; }
+    var n = parseInt(raw, 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function setSchema(n) {
+    var ls = backend();
+    if (!ls) return false;
+    try { ls.setItem(KEY_SCHEMA, String(n)); return true; } catch (e) { return false; }
+  }
+
+  function replaceRecent(list) {
+    return write(KEY_RECENT, (list || []).slice(0, RECENT_MAX));
+  }
+
+  function replaceFavorites(list) {
+    return write(KEY_FAV, (list || []).slice(0, FAV_MAX));
+  }
+
   function favoriteById(id) {
     var list = favorites();
     for (var i = 0; i < list.length; i++) if (list[i] && list[i].id === id) return list[i];
@@ -144,13 +171,17 @@ window.PW = window.PW || {};
     recent: recent,
     pushRecent: pushRecent,
     clearRecent: clearRecent,
+    schema: schema,
+    setSchema: setSchema,
+    replaceRecent: replaceRecent,
+    replaceFavorites: replaceFavorites,
     favorites: favorites,
     addFavorite: addFavorite,
     removeFavorite: removeFavorite,
     clearFavorites: clearFavorites,
     favoriteById: favoriteById,
     sigOf: sigOf,
-    keys: { recent: KEY_RECENT, fav: KEY_FAV },
-    limits: { recent: RECENT_MAX, fav: FAV_MAX }
+    keys: { recent: KEY_RECENT, fav: KEY_FAV, schema: KEY_SCHEMA },
+    limits: { recent: RECENT_MAX, fav: FAV_MAX, schema: SCHEMA }
   };
 })(window.PW);

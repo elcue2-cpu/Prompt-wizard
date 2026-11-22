@@ -6,7 +6,7 @@ window.PW = window.PW || {};
 (function (PW) {
   'use strict';
   PW.config = {
-    version: 'v4.0',
+    version: 'v4.1',
     urlSync: true,
     ads: {
       enabled: false,

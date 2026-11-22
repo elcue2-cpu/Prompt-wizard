@@ -1,8 +1,10 @@
 /* =========================================================
-   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4)
-   입력: state {cat, job, task, out, answers, memo, guards}
-   출력: [{key, text}] 문단 배열 — 8요소(역할·직무맥락·상황·목적·세부요구·출력형식·유의사항·검증)
-   엔진은 특정 도메인을 모른다. 문장 뼈대는 data/outputs-*.js의 template이 갖는다.
+   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.1)
+   입력: state {cat, job, task, out, tplId, answers, memo, guards}
+   출력: [{key, text}] 문단 배열 — 역할·맥락·요청·프레임·상황·형식·문체·규칙·조건·관점·분량·원칙·검증
+   엔진은 특정 도메인을 모른다. 문장 뼈대는 data/outputs-*.js의 template이 갖고,
+   분야 전문성은 data/frames-office.js의 frame이, 문서별 특화는 templates-office.js의 정의가 맡는다.
+   v3 문단(역할·맥락·요청·상황·형식·문체·규칙·관점·분량·원칙·검증)은 문장 그대로 보존한다.
    ========================================================= */
 window.PW = window.PW || {};
 
@@ -50,12 +52,24 @@ window.PW = window.PW || {};
 
   /* ---------- 데이터 조회 ---------- */
   function byId(list, id) {
-    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    for (var i = 0; i < (list || []).length; i++) if (list[i].id === id) return list[i];
     return null;
   }
   function jobOf(st) { return st.job ? byId(D.jobs, st.job) : null; }
   function taskOf(st) { return st.task ? byId(D.tasks, st.task) : null; }
   function outputOf(st) { return st.out ? byId(D.outputs, st.out) : null; }
+  function frameOf(job) {
+    if (!job) return null;
+    var list = D.frames || [];
+    var fid = job.frameId || job.id;
+    for (var i = 0; i < list.length; i++) if (list[i].id === fid) return list[i];
+    return null;
+  }
+  function templateOf(st) {
+    if (!st || !st.tplId) return null;
+    if (D.templatesById && D.templatesById[st.tplId]) return D.templatesById[st.tplId];
+    return byId(D.templates || [], st.tplId);
+  }
 
   /* ---------- 템플릿 치환 ---------- */
   function pick(map, value, fallback) {
@@ -91,6 +105,13 @@ window.PW = window.PW || {};
     return Object.prototype.hasOwnProperty.call(BLOCKS, v) ? BLOCKS[v] : v;
   }
 
+  /* 선택지 value → 화면 라벨 (조건 문단용) */
+  function optionLabel(optKey, value) {
+    var opts = (D.options || {})[optKey] || [];
+    for (var i = 0; i < opts.length; i++) if (opts[i].value === value) return opts[i].label;
+    return value;
+  }
+
   /* ---------- 문단 빌더 ---------- */
 
   /* ① 역할 — 직무를 고르면 그 직무 실무자로 역할을 좁힌다 */
@@ -113,6 +134,19 @@ window.PW = window.PW || {};
     if (!spec) return '';
     if (typeof spec === 'string') return spec;
     return fillTpl(spec.tpl, resolveVars(spec, answers));
+  }
+
+  /* ③-b 분야 사고 프레임 — 프레임이 없으면 빈 문자열(v3 출력 그대로) */
+  function frameSegment(frame) {
+    if (!frame) return '';
+    var steps = (frame.thinking || []).map(function (s, i) {
+      return '①②③④⑤⑥'.charAt(i) + ' ' + s;
+    }).join(' → ');
+    var parts = [];
+    if (steps) parts.push('판단은 다음 순서로 해 주세요: ' + steps + '.');
+    if (frame.format) parts.push(frame.format);
+    if (frame.style) parts.push(frame.style);
+    return parts.join(' ');
   }
 
   /* ④ 상황(메모) */
@@ -154,6 +188,29 @@ window.PW = window.PW || {};
     return arr.join(' ');
   }
 
+  /* ⑦-b 분야 공통 조건 + 템플릿 전용 조건 (사용자가 고른 칩만 문장으로) */
+  function condSegment(st, frame, tpl) {
+    var a = (st && st.answers) || {};
+    var parts = [];
+    var domainBits = [];
+    ((frame && frame.asks) || []).forEach(function (ask) {
+      var v = a[ask.key];
+      if (v) domainBits.push(ask.label.replace(/\?$/, '') + '=' + v);
+    });
+    if (domainBits.length) parts.push('분야 조건은 ' + domainBits.join(', ') + '입니다.');
+    var tplBits = [];
+    ((tpl && tpl.extraAsks) || []).forEach(function (ask) {
+      var v = a[ask.key];
+      if (!v) return;
+      var label = ask.opt ? optionLabel(ask.opt, v) : v;
+      tplBits.push(ask.label.replace(/\?$/, '') + '=' + label);
+    });
+    if (tplBits.length) {
+      parts.push('이 문서에만 적용할 조건은 ' + tplBits.join(', ') + '입니다.');
+    }
+    return parts.join(' ');
+  }
+
   /* ⑧ 직무·업무 관점 (검증 기준) */
   function checkSegment(job, task) {
     if (!job) return '';
@@ -181,12 +238,20 @@ window.PW = window.PW || {};
     return '다음 원칙은 반드시 지켜 주세요. ' + arr.join(' ');
   }
 
-  /* ⑪ 결과물 검증 조건 */
-  function verifySegment(tpl) {
-    return tpl.verify || '';
+  /* ⑪ 결과물 검증 조건 + 템플릿·분야 점검 */
+  function verifySegment(tpl, tplDef, frame) {
+    var parts = [];
+    if (tpl && tpl.verify) parts.push(tpl.verify);
+    if (tplDef && tplDef.verify) parts.push(tplDef.verify);
+    if (frame && (frame.checks || []).length) {
+      parts.push('분야 점검 기준: ' + frame.checks.map(function (c, i) {
+        return '①②③④⑤'.charAt(i) + ' ' + c;
+      }).join(', ') + '을 확인해 주세요.');
+    }
+    return parts.join(' ');
   }
 
-  var ORDER = ['role', 'context', 'request', 'situation', 'format', 'style', 'detail', 'check', 'limit', 'rule', 'verify'];
+  var ORDER = ['role', 'context', 'request', 'frame', 'situation', 'format', 'style', 'detail', 'cond', 'check', 'limit', 'rule', 'verify'];
 
   function build(st) {
     var out = outputOf(st);
@@ -195,6 +260,8 @@ window.PW = window.PW || {};
     var a = (st && st.answers) || {};
     var job = jobOf(st);
     var task = taskOf(st);
+    var frame = frameOf(job);
+    var tplDef = templateOf(st);
     var segs = [];
     var keys = tpl.segments || ORDER;
 
@@ -203,14 +270,16 @@ window.PW = window.PW || {};
       if (key === 'role') text = roleSegment(tpl, job);
       else if (key === 'context') text = contextSegment(job, task);
       else if (key === 'request') text = requestSegment(tpl, a);
+      else if (key === 'frame') text = frameSegment(frame);
       else if (key === 'situation') text = situationSegment(st);
       else if (key === 'format') text = formatSegment(tpl, a);
       else if (key === 'style') text = styleSegment(tpl, a);
       else if (key === 'detail') text = detailSegment(tpl, a);
+      else if (key === 'cond') text = condSegment(st, frame, tplDef);
       else if (key === 'check') text = checkSegment(job, task);
       else if (key === 'limit') text = limitSegment(tpl, a);
       else if (key === 'rule') text = ruleSegment(st);
-      else if (key === 'verify') text = verifySegment(tpl);
+      else if (key === 'verify') text = verifySegment(tpl, tplDef, frame);
       if (text) segs.push({ key: key, text: text });
     });
 
@@ -226,16 +295,21 @@ window.PW = window.PW || {};
     jobOf: jobOf,
     taskOf: taskOf,
     outputOf: outputOf,
+    frameOf: frameOf,
+    templateOf: templateOf,
+    optionLabel: optionLabel,
     byId: byId,
     fillTpl: fillTpl,
     segmentTexts: {
       role: roleSegment,
       context: contextSegment,
       request: requestSegment,
+      frame: frameSegment,
       situation: situationSegment,
       format: formatSegment,
       style: styleSegment,
       detail: detailSegment,
+      cond: condSegment,
       check: checkSegment,
       limit: limitSegment,
       rule: ruleSegment,

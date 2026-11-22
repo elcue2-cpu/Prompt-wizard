@@ -1,8 +1,7 @@
 /* Prompt Wizard — 자주 쓰는 5종 원클릭 프리셋
-   각 항목은 위자드의 네 단계(cat·job·task·out)와 세부 조건(opt)을 모두 담는다.
-   opt는 선택지 value를 |로 이은 문자열이다(예: 'doc:doc:internal' 대신 'doc:internal'만 써도 됨).
-   여기 값을 바꾸면 메인 빠른 시작과 랜딩 CTA가 함께 바뀌지 않는다 —
-   랜딩 CTA는 tools/build_landing.py의 표를 따른다(같은 값을 쓰도록 맞춰 둔다). */
+   각 항목은 위자드의 단계(cat·job·task·out)와 세부 조건(opt)을 모두 담는다.
+   v4.1: 8분야 개편으로 job 값만 새 분야 id로 바꿨다(업무 id는 그대로).
+   opt는 선택지 value를 |로 이은 문자열이다. */
 window.PW = window.PW || {};
 (function (PW) {
   'use strict';
@@ -13,7 +12,7 @@ window.PW = window.PW || {};
       label: '보고서 작성',
       icon: '📄',
       desc: '결재·보고용 문서를 개조식으로',
-      cat: 'public', job: 'ops', task: 'program', out: 'report',
+      cat: 'public', job: 'biz', task: 'program', out: 'report',
       opt: 'doc:internal|goal:status|tone:brief'
     },
     {
@@ -21,7 +20,7 @@ window.PW = window.PW || {};
       label: '공문 작성',
       icon: '🏷️',
       desc: '타부서·유관기관 협조공문',
-      cat: 'public', job: 'ops', task: 'admin', out: 'collab',
+      cat: 'public', job: 'offc', task: 'admin', out: 'collab',
       opt: 'cTarget:dept|cWhy:coop|cForm:cover'
     },
     {
@@ -29,7 +28,7 @@ window.PW = window.PW || {};
       label: '엑셀 자동화',
       icon: '📊',
       desc: '수식·매크로·데이터 정리',
-      cat: 'public', job: 'ops', task: 'bsc', out: 'excel',
+      cat: 'public', job: 'biz', task: 'performance', out: 'excel',
       opt: 'tool:excel|xl:build|depth:beginner'
     },
     {
@@ -37,7 +36,7 @@ window.PW = window.PW || {};
       label: '눈치 보이는 이메일',
       icon: '✉️',
       desc: '거절·독촉·사과 메일',
-      cat: 'public', job: 'ops', task: 'complaint', out: 'mail',
+      cat: 'public', job: 'offc', task: 'complaint', out: 'mail',
       opt: 'mailTo:vendor|mailWhy:push|mailTone:soft'
     },
     {
@@ -45,7 +44,7 @@ window.PW = window.PW || {};
       label: '회의록 요약',
       icon: '🗒️',
       desc: '결정사항·할 일만 뽑기',
-      cat: 'public', job: 'ops', task: 'operation', out: 'summary',
+      cat: 'public', job: 'biz', task: 'sop', out: 'summary',
       opt: 'src:meeting|focus:todo|len:half'
     }
   ];

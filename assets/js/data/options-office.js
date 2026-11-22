@@ -159,6 +159,67 @@ window.PW = window.PW || {};
       { value: 'deliverable:brief', label: '보고용 요약' },
       { value: 'deliverable:plan', label: '실행 계획서' },
       { value: 'deliverable:opinion', label: '검토 의견서' }
+    ],
+
+    /* ── 표·서식 (v4.1 신설) ── */
+    formUse: [
+      { value: 'form:check', label: '점검·판정표' },
+      { value: 'form:ledger', label: '대장·명부' },
+      { value: 'form:log', label: '일지·기록' },
+      { value: 'form:plan', label: '계획·일정표' },
+      { value: 'form:confirm', label: '확인·인수서' }
+    ],
+    formCols: [
+      { value: 'formcols:standard', label: '기본 항목만' },
+      { value: 'formcols:judge', label: '판정·조치 포함' },
+      { value: 'formcols:sign', label: '서명·확인 포함' },
+      { value: 'formcols:amount', label: '수량·금액 포함' }
+    ],
+    formRows: [
+      { value: 'formrows:blank', label: '빈 서식 20행' },
+      { value: 'formrows:sample', label: '예시 5행 + 빈 행' },
+      { value: 'formrows:few', label: '10행 이내' }
+    ],
+
+    /* ── 특화 템플릿 전용 질문 (업무 템플릿 카드가 붙이는 1문항) ── */
+    xDecide: [
+      { value: 'x:approve', label: '승인·추진 결정' },
+      { value: 'x:status', label: '현황·실적 보고' },
+      { value: 'x:defend', label: '예산·문제 방어' },
+      { value: 'x:rule', label: '규정·기준 확인' }
+    ],
+    xReply: [
+      { value: 'x:date', label: '날짜·시각 명시' },
+      { value: 'x:negotiate', label: '협의 후 결정' },
+      { value: 'x:none', label: '기한 없음' }
+    ],
+    xExpect: [
+      { value: 'x:approve', label: '승인·회신' },
+      { value: 'x:schedule', label: '일정 조정' },
+      { value: 'x:data', label: '자료 제출' },
+      { value: 'x:ack', label: '수령 확인' }
+    ],
+    xBasis: [
+      { value: 'x:unit', label: '단가·요율 기준' },
+      { value: 'x:period', label: '기간·기준일' },
+      { value: 'x:formula', label: '산식·분자·분모' },
+      { value: 'x:none', label: '미정' }
+    ],
+    xFmt: [
+      { value: 'x:onepage', label: '한 장 요약' },
+      { value: 'x:table', label: '표 중심' },
+      { value: 'x:minutes', label: '회의록 형식' }
+    ],
+    xChoice: [
+      { value: 'x:adopt', label: '즉시 적용' },
+      { value: 'x:pilot', label: '시범 적용' },
+      { value: 'x:hold', label: '보류·추가 검토' }
+    ],
+    xUse: [
+      { value: 'x:check', label: '점검·판정' },
+      { value: 'x:ledger', label: '대장·누적' },
+      { value: 'x:log', label: '일지·기록' },
+      { value: 'x:confirm', label: '확인·서명' }
     ]
   };
 })(window.PW);

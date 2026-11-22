@@ -16,6 +16,7 @@ window.PW = window.PW || {};
     job: null,
     task: null,
     out: null,
+    tplId: null,
     answersByOut: {},
     answers: {},
     memo: '',
@@ -31,6 +32,7 @@ window.PW = window.PW || {};
   var renderedTask = '__init__';
   var renderedOut = '__init__';
   var renderedMore = null;
+  var renderedTpl = '__init__';
   var renderedCat = '__init__';
   var prevPct = -1;
   var rafPending = false;
@@ -81,6 +83,15 @@ window.PW = window.PW || {};
     catModalList: $('catModalList'),
     catModalOk: $('catModalOk'),
     quickStart: $('quickStart'),
+    searchInput: $('searchInput'),
+    searchResults: $('searchResults'),
+    searchClear: $('searchClear'),
+    searchHint: $('searchHint'),
+    tplWrap: $('tplWrap'),
+    tplGrid: $('tplGrid'),
+    tplCount: $('tplCount'),
+    frameWrap: $('frameWrap'),
+    frameAsks: $('frameAsks'),
     qualityPanel: $('qualityPanel'),
     qualityToggle: $('qualityToggle'),
     qualityBody: $('qualityBody'),
@@ -103,6 +114,37 @@ window.PW = window.PW || {};
   function currentJob() { return state.job ? E.byId(D.jobs, state.job) : null; }
   function currentTask() { return state.task ? E.byId(D.tasks, state.task) : null; }
   function currentOutput() { return state.out ? E.byId(D.outputs, state.out) : null; }
+
+  /* ---------------- 별칭·프레임·템플릿 도우미 ---------------- */
+
+  /* 해석 순서: task → job → cat. 업무 별칭이 직무 별칭보다 우선이다. */
+  function resolveTaskId(id) {
+    if (!id) return null;
+    if (E.byId(D.tasks, id)) return id;
+    var a = (D.taxonomyAlias && D.taxonomyAlias.task) || {};
+    if (a[id] && E.byId(D.tasks, a[id].task)) return a[id].task;
+    return null;
+  }
+
+  function resolveJobId(id) {
+    if (!id) return null;
+    if (E.byId(D.jobs, id)) return id;
+    var a = (D.taxonomyAlias && D.taxonomyAlias.job) || {};
+    if (a[id] && E.byId(D.jobs, a[id].domain)) return a[id].domain;
+    return null;
+  }
+
+  function currentFrame() {
+    var job = currentJob();
+    return job ? E.frameOf(job) : null;
+  }
+
+  function currentTpl() { return state.tplId ? E.templateOf(state) : null; }
+
+  function taskTemplates(taskId) {
+    var map = D.taskTemplates || {};
+    return (map[taskId] || []).slice();
+  }
 
   function answersFor(outId) {
     if (!state.answersByOut[outId]) state.answersByOut[outId] = {};
@@ -290,6 +332,7 @@ window.PW = window.PW || {};
       var tx = h('span', 'job-text');
       tx.appendChild(h('span', 'job-name', j.name));
       tx.appendChild(h('span', 'job-desc', j.desc));
+      tx.appendChild(h('span', 'job-meta', ((j.taskIds || []).length) + '개 업무'));
       btn.appendChild(tx);
       btn.appendChild(h('span', 'job-check', '✓'));
       els.jobGrid.appendChild(btn);
@@ -321,8 +364,8 @@ window.PW = window.PW || {};
     });
     var jobName = job ? job.name : '';
     els.step2Sub.textContent = job
-      ? jobName + ' 직무의 세부 업무 ' + jobTasks(job).length + '개 중 하나를 골라 주세요.'
-      : 'STEP 01에서 직무를 먼저 골라 주세요.';
+      ? jobName + ' 분야의 세부 업무 ' + jobTasks(job).length + '개 중 하나를 골라 주세요.'
+      : 'STEP 01에서 직무 분야를 먼저 골라 주세요.';
   }
 
   function syncTasks() {
@@ -371,19 +414,89 @@ window.PW = window.PW || {};
     });
   }
 
+  /* ---------------- STEP 03 특화 템플릿 카드 ---------------- */
+
+  function baseBadge(base) {
+    return { report: '보고서', collab: '공문', mail: '메일', excel: '엑셀',
+      summary: '요약', review: '검토', form: '표·서식' }[base] || '문서';
+  }
+
+  function buildTemplates() {
+    if (!els.tplGrid) return;
+    var cards = taskTemplates(state.task);
+    els.tplGrid.innerHTML = '';
+    if (els.tplWrap) els.tplWrap.hidden = !(state.task && cards.length);
+    if (els.tplCount) els.tplCount.textContent = String(cards.length);
+    var defs = D.templatesById || {};
+    cards.forEach(function (c) {
+      var def = defs[c.tpl] || E.byId(D.templates || [], c.tpl);
+      if (!def) return;
+      var btn = h('button', 'tpl-card');
+      btn.type = 'button';
+      btn.setAttribute('data-tpl', c.tpl);
+      btn.setAttribute('aria-pressed', 'false');
+      btn.appendChild(h('span', 'tpl-base', baseBadge(def.base)));
+      btn.appendChild(h('span', 'tpl-name', c.name));
+      btn.appendChild(h('span', 'tpl-desc', def.desc));
+      btn.appendChild(h('span', 'tpl-check', '✓'));
+      els.tplGrid.appendChild(btn);
+    });
+  }
+
+  function syncTemplates() {
+    if (!els.tplGrid) return;
+    var nodes = els.tplGrid.querySelectorAll('[data-tpl]');
+    Array.prototype.forEach.call(nodes, function (n) {
+      var on = n.getAttribute('data-tpl') === state.tplId;
+      n.classList.toggle('is-on', on);
+      n.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  /* 템플릿 적용: 상속 결과물 + 미리 채우는 칩(화면에 체크로 보임) + 전용 질문 */
+  function applyTemplate(tplId) {
+    var def = (D.templatesById || {})[tplId] || E.byId(D.templates || [], tplId);
+    if (!def) return false;
+    state.tplId = def.id;
+    state.out = def.base;
+    if (!state.answersByOut[def.base]) state.answersByOut[def.base] = {};
+    state.answers = state.answersByOut[def.base];
+    var preset = def.preset || {};
+    Object.keys(preset).forEach(function (k) { state.answers[k] = preset[k]; });
+    return true;
+  }
+
+  function selectTemplate(tplId) {
+    if (!applyTemplate(tplId)) return;
+    state.step = 4;
+    state.moreOpen = true;
+    state.step = 4;
+    render();
+    recordRecent();
+    var sec = $('wstep4');
+    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var def = currentTpl();
+    if (def) PW.editor.toast('「' + def.name + '」 템플릿을 골랐어요. 미리 채운 칩만 확인하세요.');
+  }
+
   /* ---------------- STEP 04 세부 조건 ---------------- */
 
-  function askBlock(ask) {
+  function askBlock(ask, group) {
     var wrap = h('div', 'q');
     wrap.setAttribute('data-ask-block', ask.key);
+    if (group) wrap.setAttribute('data-ask-group', group);
 
     var lab = h('div', 'q-label');
     lab.appendChild(h('span', 'q-label-tx', ask.label));
     if (ask.hint) lab.appendChild(h('span', 'q-hint', ask.hint));
+    if (ask.why) lab.appendChild(h('span', 'q-hint', ask.why));
     wrap.appendChild(lab);
 
     var chips = h('div', 'chips');
-    var opts = D.options[ask.opt] || [];
+    var raw = ask.options || (D.options[ask.opt] || []);
+    var opts = raw.map(function (x) {
+      return (typeof x === 'string') ? { value: x, label: x } : x;
+    });
     var a = answersFor(state.out);
     opts.forEach(function (o) {
       var b = h('button', 'chip');
@@ -403,6 +516,17 @@ window.PW = window.PW || {};
   function buildAsks() {
     els.detailAsks.innerHTML = '';
     var o = currentOutput();
+    var frame = currentFrame();
+
+    /* 분야 공통 조건 — 결과물을 고르면 그 분야의 필수 질문 4~5개가 뜤다 */
+    if (els.frameAsks) {
+      els.frameAsks.innerHTML = '';
+      if (els.frameWrap) els.frameWrap.hidden = !(frame && state.out);
+      if (frame && state.out) {
+        (frame.asks || []).forEach(function (a) { els.frameAsks.appendChild(askBlock(a, 'frame')); });
+      }
+    }
+
     if (!o) {
       els.moreAsksBtn.hidden = true;
       els.step4Sub.textContent = 'STEP 03에서 결과물을 먼저 골라 주세요.';
@@ -410,31 +534,41 @@ window.PW = window.PW || {};
     }
     var required = o.asks.filter(function (a) { return a.required; });
     var advanced = o.asks.filter(function (a) { return !a.required; });
+    var def = currentTpl();
+    var tplAsks = (def && def.extraAsks) ? def.extraAsks : [];
 
-    required.forEach(function (a) { els.detailAsks.appendChild(askBlock(a)); });
+    required.forEach(function (a) { els.detailAsks.appendChild(askBlock(a, 'out')); });
     if (state.moreOpen) {
-      advanced.forEach(function (a) { els.detailAsks.appendChild(askBlock(a)); });
+      advanced.forEach(function (a) { els.detailAsks.appendChild(askBlock(a, 'out')); });
+      tplAsks.forEach(function (a) { els.detailAsks.appendChild(askBlock(a, 'tpl')); });
     }
 
-    if (advanced.length) {
+    var more = advanced.length + tplAsks.length;
+    if (more) {
       els.moreAsksBtn.hidden = false;
       els.moreAsksBtn.setAttribute('aria-expanded', state.moreOpen ? 'true' : 'false');
       els.moreAsksBtn.textContent = state.moreOpen
         ? '− 세부 조건 접기'
-        : '+ 더 세부 조건 (' + advanced.length + '개)';
+        : '+ 더 세부 조건 (' + more + '개)';
     } else {
       els.moreAsksBtn.hidden = true;
     }
-    els.step4Sub.textContent = '「' + o.name + '」에 꼭 필요한 조건만 묻습니다. 선택 사항은 접어 두었습니다.';
+    var tail = def ? ' 「' + def.name + '」 전용 조건 ' + tplAsks.length + '개가 더 있습니다.' : '';
+    els.step4Sub.textContent = '「' + o.name + '」에 꼭 필요한 조건만 묻습니다.' + tail;
   }
 
   function syncAsks() {
     var a = answersFor(state.out);
-    var nodes = els.detailAsks.querySelectorAll('[data-ask]');
-    Array.prototype.forEach.call(nodes, function (n) {
-      var on = a[n.getAttribute('data-ask')] === n.getAttribute('data-val');
-      n.classList.toggle('is-on', on);
-      n.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var hosts = [els.detailAsks];
+    if (els.frameAsks) hosts.push(els.frameAsks);
+    hosts.forEach(function (host) {
+      if (!host) return;
+      var nodes = host.querySelectorAll('[data-ask]');
+      Array.prototype.forEach.call(nodes, function (n) {
+        var on = a[n.getAttribute('data-ask')] === n.getAttribute('data-val');
+        n.classList.toggle('is-on', on);
+        n.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
     });
   }
 
@@ -464,8 +598,9 @@ window.PW = window.PW || {};
 
   function applyMemoField() {
     var o = currentOutput();
+    var def = currentTpl();
     if (o) {
-      els.memo.setAttribute('placeholder', o.memo.placeholder);
+      els.memo.setAttribute('placeholder', def ? def.memoHint : o.memo.placeholder);
       els.exampleBtn.hidden = false;
       els.memoHint.textContent = '구체적인 숫자·기한·이름이 들어갈수록 결과가 좋아집니다.';
     } else {
@@ -555,6 +690,7 @@ window.PW = window.PW || {};
     state.task = q.task;
     if (q.job && q.task) state.lastTaskByJob[q.job] = q.task;
     state.out = q.out;
+    state.tplId = null;
     state.answersByOut[q.out] = {};
     state.answers = state.answersByOut[q.out];
     state.moreOpen = false;
@@ -570,6 +706,86 @@ window.PW = window.PW || {};
     if (els.liveStatus) els.liveStatus.textContent = q.label + ' 프리셋으로 시작했습니다. 필요한 값만 바꿔 보세요.';
     PW.editor.toast('「' + q.label + '」 프리셋으로 시작했어요. 빈 칸만 채우면 됩니다.');
     return true;
+  }
+
+  /* ---------------- 자연어 업무 검색 ---------------- */
+
+  function taskNameOf(id) { var t = E.byId(D.tasks, id); return t ? t.name : ''; }
+  function domainNameOf(id) { var j = E.byId(D.jobs, id); return j ? j.name : ''; }
+  function outShortOf(id) { var o = E.byId(D.outputs, id); return o ? (o.short || o.name) : ''; }
+
+  function appendSearchRow(domainId, taskId, outId, why, tplId) {
+    var b = h('button', 'search-hit');
+    b.type = 'button';
+    b.setAttribute('data-dom', domainId || '');
+    b.setAttribute('data-task-id', taskId || '');
+    b.setAttribute('data-out-id', outId || 'report');
+    if (tplId) b.setAttribute('data-tpl-id', tplId);
+    b.appendChild(h('span', 'sh-path', domainNameOf(domainId) + ' › ' + taskNameOf(taskId)));
+    b.appendChild(h('span', 'sh-out', outShortOf(outId)));
+    if (why) b.appendChild(h('span', 'sh-why', why));
+    els.searchResults.appendChild(b);
+  }
+
+  function renderSearch() {
+    if (!els.searchResults || !els.searchInput) return;
+    var q = String(els.searchInput.value || '').trim();
+    if (els.searchClear) els.searchClear.hidden = !q;
+    els.searchResults.innerHTML = '';
+    if (!q) {
+      els.searchResults.hidden = true;
+      if (els.searchHint) els.searchHint.textContent = '예: “전기실 정기점검 결과보고서”, “위험성평가표 만들어줘”';
+      return;
+    }
+    var res = PW.search.query(q, 3);
+    if (!res.results.length) {
+      els.searchResults.appendChild(h('p', 'search-empty', '비슷한 업무를 찾지 못했어요. 자주 쓰는 업무부터 보여 드립니다.'));
+      PW.search.popular(3).forEach(function (t) {
+        appendSearchRow(t.domainId || t.jobId, t.id, t.recommends[0], '인기 업무', null);
+      });
+    } else {
+      res.results.forEach(function (r) {
+        appendSearchRow(r.domainId, r.taskId, r.outId, r.why, r.tplId);
+      });
+    }
+    els.searchResults.hidden = false;
+    if (els.searchHint) els.searchHint.textContent = res.results.length
+      ? '결과를 누르면 그 업무로 바로 들어갑니다.'
+      : '다른 말로 한 번 더 찾아보세요.';
+  }
+
+  function applySearchHit(btn) {
+    if (!btn) return;
+    var dom = resolveJobId(btn.getAttribute('data-dom'));
+    var task = resolveTaskId(btn.getAttribute('data-task-id'));
+    var outId = btn.getAttribute('data-out-id');
+    var tplId = btn.getAttribute('data-tpl-id');
+    if (PW.editor.isEditing()) PW.editor.setEditing(false);
+    state.cat = D.liveCategoryId;
+    if (dom) state.job = dom;
+    if (task) state.task = task;
+    var tk = task ? E.byId(D.tasks, task) : null;
+    if (tk) state.job = tk.domainId || tk.jobId;
+    state.tplId = null;
+    var applied = false;
+    if (tplId) applied = applyTemplate(tplId);
+    if (!applied && outId && E.byId(D.outputs, outId)) {
+      state.out = outId;
+      if (!state.answersByOut[outId]) state.answersByOut[outId] = {};
+      state.answers = state.answersByOut[outId];
+    }
+    state.moreOpen = false;
+    state.step = 4;
+    renderedJob = '__search__';
+    renderedTask = '__search__';
+    renderedOut = '__search__';
+    renderedTpl = '__init__';
+    render();
+    recordRecent();
+    els.searchResults.hidden = true;
+    var sec = $('wstep4');
+    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    PW.editor.toast('「' + taskNameOf(task) + '」 업무로 이동했어요.');
   }
 
   /* ---------------- URL 프리셋 ---------------- */
@@ -596,7 +812,7 @@ window.PW = window.PW || {};
       var v = dec(i < 0 ? '' : pair.slice(i + 1));
       if (!v) return;
       if (k === 'opt') { preset.opt = v.split('|').filter(function (x) { return !!x; }); has = true; }
-      else if (k === 'cat' || k === 'job' || k === 'task' || k === 'out') { preset[k] = v; has = true; }
+      else if (k === 'cat' || k === 'job' || k === 'task' || k === 'out' || k === 'tpl') { preset[k] = v; has = true; }
     });
     return has ? preset : null;
   }
@@ -629,20 +845,25 @@ window.PW = window.PW || {};
       var c = E.byId(D.categories, p.cat);
       if (c && c.status === 'live') { state.cat = p.cat; applied = true; }
     }
-    if (p.job) {
-      var j = E.byId(D.jobs, p.job);
-      if (j && (!p.cat || j.cat === state.cat)) { state.job = p.job; applied = true; }
+    /* 해석 순서: task → job → cat (업무 별칭이 직무 별칭보다 우선) */
+    var taskId = p.task ? resolveTaskId(p.task) : null;
+    if (taskId) {
+      var t = E.byId(D.tasks, taskId);
+      state.task = taskId;
+      state.job = t.domainId || t.jobId;
+      state.lastTaskByJob[state.job] = taskId;
+      applied = true;
+    } else if (p.job) {
+      var jid = resolveJobId(p.job);
+      if (jid && (!p.cat || state.cat === p.cat)) { state.job = jid; applied = true; }
     }
-    if (p.task) {
-      var t = E.byId(D.tasks, p.task);
-      if (t && (!state.job || t.jobId === state.job)) {
-        state.task = p.task;
-        if (!state.job) state.job = t.jobId;
-        state.lastTaskByJob[t.jobId] = p.task;
-        applied = true;
-      }
-    }
-    if (p.out) {
+    if (taskId && p.job && !state.job) state.job = resolveJobId(p.job);
+    state.tplId = null;
+    if (p.tpl && (D.templatesById || {})[p.tpl]) {
+      var def = D.templatesById[p.tpl];
+      var ownerOk = !def.owner || def.owner === state.task;
+      if (ownerOk) { applyTemplate(p.tpl); applied = true; }
+    } else if (p.out) {
       var o = E.byId(D.outputs, p.out);
       if (o) {
         state.out = p.out;
@@ -660,6 +881,7 @@ window.PW = window.PW || {};
     renderedJob = '__preset__';
     renderedTask = '__preset__';
     renderedOut = '__preset__';
+    renderedTpl = '__init__';
     return applied;
   }
 
@@ -680,6 +902,7 @@ window.PW = window.PW || {};
     if (state.out) parts.push('out=' + enc(state.out));
     var a = state.out ? answersFor(state.out) : {};
     var vals = Object.keys(a).map(function (k) { return a[k]; }).filter(function (v) { return !!v; });
+    if (state.tplId) parts.push('tpl=' + enc(state.tplId));
     if (vals.length) parts.push('opt=' + enc(vals.join('|')));
     return parts.length ? '?' + parts.join('&') : '';
   }
@@ -749,7 +972,7 @@ window.PW = window.PW || {};
 
   function fullSelection() {
     return {
-      cat: state.cat, job: state.job, task: state.task, out: state.out,
+      cat: state.cat, job: state.job, task: state.task, out: state.out, tplId: state.tplId,
       answers: state.out ? answersFor(state.out) : {},
       memo: state.memo, guards: state.guards
     };
@@ -833,8 +1056,20 @@ window.PW = window.PW || {};
     if (!sel) return false;
     var selCat = sel.cat ? E.byId(D.categories, sel.cat) : null;
     if (selCat && selCat.status === 'live') state.cat = sel.cat;
-    if (sel.job && E.byId(D.jobs, sel.job)) state.job = sel.job;
-    if (sel.task && E.byId(D.tasks, sel.task)) { state.task = sel.task; state.lastTaskByJob[state.job] = sel.task; }
+    var jid = resolveJobId(sel.job);
+    if (jid) state.job = jid;
+    var tid = resolveTaskId(sel.task);
+    if (tid) {
+      state.task = tid;
+      var tk = E.byId(D.tasks, tid);
+      state.job = tk.domainId || tk.jobId;
+      state.lastTaskByJob[state.job] = tid;
+    }
+    state.tplId = null;
+    if (sel.tplId && (D.templatesById || {})[sel.tplId]) {
+      var d = D.templatesById[sel.tplId];
+      if (!d.owner || d.owner === state.task) state.tplId = sel.tplId;
+    }
     if (sel.out && E.byId(D.outputs, sel.out)) {
       state.out = sel.out;
       state.answersByOut[sel.out] = sel.answers ? JSON.parse(JSON.stringify(sel.answers)) : {};
@@ -912,14 +1147,17 @@ window.PW = window.PW || {};
 
     if (renderedTask !== state.task) {
       buildOutputs();
+      buildTemplates();
       renderedTask = state.task;
     }
     syncOutputs();
+    syncTemplates();
 
-    if (renderedOut !== state.out || renderedMore !== state.moreOpen) {
+    if (renderedOut !== state.out || renderedMore !== state.moreOpen || renderedTpl !== state.tplId) {
       buildAsks();
       renderedOut = state.out;
       renderedMore = state.moreOpen;
+      renderedTpl = state.tplId;
     }
     syncAsks();
     applyMemoField();
@@ -992,11 +1230,13 @@ window.PW = window.PW || {};
     if (!E.byId(D.tasks, id)) return;
     if (state.task === id) {
       state.task = null;
+      state.tplId = null;
       state.step = 2;
       render();
       return;
     }
     state.task = id;
+    state.tplId = null;
     state.lastTaskByJob[state.job] = id;
     state.step = Math.max(state.step, 3);
     render();
@@ -1005,6 +1245,10 @@ window.PW = window.PW || {};
   function selectOut(id) {
     if (!E.byId(D.outputs, id)) return;
     if (state.out === id) return;
+    if (state.tplId) {
+      var d = currentTpl();
+      if (!d || d.base !== id) state.tplId = null;
+    }
     state.out = id;
     state.answers = answersFor(id);
     state.step = 4;
@@ -1026,6 +1270,7 @@ window.PW = window.PW || {};
     state.job = null;
     state.task = null;
     state.out = null;
+    state.tplId = null;
     state.answersByOut = {};
     state.answers = {};
     state.memo = '';
@@ -1101,11 +1346,49 @@ window.PW = window.PW || {};
       if (btn) selectOut(btn.getAttribute('data-out'));
     });
 
+    if (els.tplGrid) {
+      els.tplGrid.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-tpl]');
+        if (btn) selectTemplate(btn.getAttribute('data-tpl'));
+      });
+    }
+
+    if (els.searchInput) {
+      els.searchInput.addEventListener('input', renderSearch);
+      els.searchInput.addEventListener('keydown', function (ev) {
+        if (!ev || ev.key !== 'Enter') return;
+        if (ev.preventDefault) ev.preventDefault();
+        var first = els.searchResults ? els.searchResults.querySelector('[data-task-id]') : null;
+        if (first) applySearchHit(first);
+      });
+    }
+    if (els.searchClear) {
+      els.searchClear.addEventListener('click', function () {
+        if (els.searchInput) els.searchInput.value = '';
+        renderSearch();
+        if (els.searchInput && els.searchInput.focus) els.searchInput.focus();
+      });
+    }
+    if (els.searchResults) {
+      els.searchResults.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-task-id]');
+        if (btn) applySearchHit(btn);
+      });
+    }
+
     els.detailAsks.addEventListener('click', function (ev) {
       var chip = ev.target.closest('[data-ask]');
       if (!chip) return;
       toggleAsk(chip.getAttribute('data-ask'), chip.getAttribute('data-val'));
     });
+
+    if (els.frameAsks) {
+      els.frameAsks.addEventListener('click', function (ev) {
+        var chip = ev.target.closest('[data-ask]');
+        if (!chip) return;
+        toggleAsk(chip.getAttribute('data-ask'), chip.getAttribute('data-val'));
+      });
+    }
 
     els.moreAsksBtn.addEventListener('click', function () {
       state.moreOpen = !state.moreOpen;
@@ -1187,6 +1470,53 @@ window.PW = window.PW || {};
     }
   }
 
+  /* ---------------- 저장값 마이그레이션 (schema 2) ---------------- */
+
+  function migrateSelection(sel) {
+    if (!sel) return null;
+    var taskId = resolveTaskId(sel.task);
+    var jobId = resolveJobId(sel.job);
+    if (!taskId && !jobId && !sel.out) return null;
+    var out = null;
+    if (taskId) {
+      var tk = E.byId(D.tasks, taskId);
+      jobId = tk.domainId || tk.jobId;
+    }
+    out = sel.out && E.byId(D.outputs, sel.out) ? sel.out : null;
+    var answers = {};
+    if (sel.answers) {
+      Object.keys(sel.answers).forEach(function (k) { answers[k] = sel.answers[k]; });
+    }
+    return {
+      cat: sel.cat || D.liveCategoryId, job: jobId, task: taskId, out: out,
+      tplId: (sel.tplId && (D.templatesById || {})[sel.tplId]) ? sel.tplId : null,
+      answers: answers, memo: sel.memo, guards: sel.guards
+    };
+  }
+
+  function migrateStore() {
+    if (!PW.store || !PW.store.available()) return;
+    if (PW.store.schema() >= 2) return;
+    var recent = [];
+    PW.store.recent().forEach(function (r) {
+      var m = migrateSelection(r);
+      if (!m || !m.out) return;
+      recent.push({
+        sig: PW.store.sigOf({ cat: m.cat, job: m.job, task: m.task, out: m.out, answers: m.answers }),
+        cat: m.cat, job: m.job, task: m.task, out: m.out, answers: m.answers, ts: r.ts
+      });
+    });
+    PW.store.replaceRecent(recent);
+    var favs = [];
+    PW.store.favorites().forEach(function (f) {
+      var m = f.sel ? migrateSelection(f.sel) : null;
+      if (m) f.sel = { cat: m.cat, job: m.job, task: m.task, out: m.out, tplId: m.tplId, answers: m.answers };
+      favs.push(f);
+    });
+    PW.store.replaceFavorites(favs);
+    PW.store.setSchema(2);
+  }
+
   /* ---------------- 시작 ---------------- */
 
   function boot() {
@@ -1208,16 +1538,27 @@ window.PW = window.PW || {};
       els.catModal.hidden = true;
       els.catModal.setAttribute('aria-hidden', 'true');
     }
+    /* 마크업 hidden과 같은 초기 상태를 코드로도 명시한다 */
+    if (els.searchResults) els.searchResults.hidden = true;
+    if (els.searchClear) els.searchClear.hidden = true;
     buildRail();
     buildJobs();
     buildGuards();
     buildTasks();
     buildOutputs();
+    buildTemplates();
     buildAsks();
     buildQuickStart();
     applyMemoField();
     autoGrow();
     wire();
+
+    if (PW.search && PW.search.build) {
+      try { PW.search.build(); } catch (e) { /* 인덱스 실패해도 위자드는 동작 */ }
+    }
+
+    /* 저장값 schema 2 — 구버전 선택값을 새 업무 id로 치환 */
+    migrateStore();
 
     /* URL 프리셋은 첫 렌더 전에 적용한다 — 기본 상태를 한 번 쓴 뒤 다시 쓰는 이중 타이핑을 막는다 */
     applyUrlPreset();
@@ -1234,6 +1575,14 @@ window.PW = window.PW || {};
     parsePreset: parsePreset,
     applyPreset: applyPreset,
     applyQuick: applyQuick,
+    applyTemplate: applyTemplate,
+    selectTemplate: selectTemplate,
+    applySearchHit: applySearchHit,
+    renderSearch: renderSearch,
+    migrateStore: migrateStore,
+    resolveTaskId: resolveTaskId,
+    resolveJobId: resolveJobId,
+    migrateStore: migrateStore,
     applySelection: applySelection,
     saveFavorite: saveFavorite,
     recordRecent: recordRecent,
@@ -1248,7 +1597,7 @@ window.PW = window.PW || {};
     modalOpen: function () { return !!(els.catModal && !els.catModal.hidden); },
     selected: function () {
       return {
-        cat: state.cat, job: state.job, task: state.task, out: state.out,
+        cat: state.cat, job: state.job, task: state.task, out: state.out, tplId: state.tplId,
         answers: state.out ? answersFor(state.out) : {},
         memo: state.memo, guards: state.guards
       };

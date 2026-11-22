@@ -25,11 +25,11 @@ PAGES = [
         'slug': 'public-report',
         'nav': '공공기관 보고서 작성',
         'title': '공공기관 보고서 작성 AI 프롬프트 · 결재·보고서 문장 만들기',
-        'description': '내부결재·결과보고·검토보고를 개조식(□·ㅇ·-)으로 쓰는 AI 프롬프트를 4단계로 만드세요. 결재권자가 30초에 판단하도록 결론·근거·계획 순서를 자동 구성합니다.',
+        'description': '내부결재·결과보고·검토보고를 개조식(□·ㅇ·-)으로 쓰는 AI 프롬프트를 3단계로 만드세요. 결재권자가 30초에 판단하도록 결론·근거·계획 순서를 자동 구성합니다.',
         'h1': '공공기관 보고서 작성 AI 프롬프트',
         'lead': [
             '보고서는 “무엇을 했는지”보다 “결재권자가 무엇을 결정해야 하는지”가 먼저 보여야 합니다. 그래서 프롬프트에 문서 성격, 결재권자가 판단할 목적, 개조식 서식, 직무별 점검 기준을 함께 넣어야 결과가 흔들리지 않습니다.',
-            '이 페이지의 프롬프트 예시는 공공기관 실무 서식(□ 대제목 → ㅇ 중항목 → - 세부내용, 「~함/~임/~예정/~필요」)을 그대로 따릅니다. 위자드에서 직무와 세부 업무를 고르면 그 직무의 판단 기준(예산 근거, 이해관계 조정, 성과지표)까지 문장에 붙습니다.'
+            '이 페이지의 프롬프트 예시는 공공기관 실무 서식(□ 대제목 → ㅇ 중항목 → - 세부내용, 「~함/~임/~예정/~필요」)을 그대로 따릅니다. 위자드에서 8대 분야와 세부 업무를 고르면 그 분야의 판단 기준(예산 근거, 이해관계 조정, 성과지표)까지 문장에 붙습니다.'
         ],
         'solves': [
             ('결론이 뒤에 숨는 보고서', '결론 → 근거 → 추진계획 → 행정사항 순서를 프롬프트에 고정해, 첫 문단에서 승인 여부를 판단할 수 있게 합니다.'),
@@ -37,7 +37,7 @@ PAGES = [
             ('감사에서 걸리는 표현', '감사·의회 요구자료는 요구 항목별 1:1 답변 구조로, 개인정보·미확정 계획은 빼도록 제외 조건을 겁니다.')
         ],
         'steps': [
-            ('직무와 세부 업무 선택', '사무·행정, IT·전산, 시설·안전, 현장 실무 중 하나를 고르고 세부 업무를 지정합니다.'),
+            ('분야와 세부 업무 선택', '사무·행정, 인사·재무, 기획, IT, 기술, 시설, 현장, 안전 8개 분야 중 하나를 고르고 세부 업무를 지정합니다.'),
             ('문서 성격·목적·문체 선택', '내부결재·협조공문·감사 대응·계약 검토 중 하나, 목적, 문체를 칩으로 고릅니다.'),
             ('상황 메모를 채우고 복사', '숫자·기한·예산을 두세 줄 적으면 프롬프트가 완성됩니다. 복사해서 쓰는 AI에 붙여 넣습니다.')
         ],
@@ -61,7 +61,7 @@ PAGES = [
             ('완성된 프롬프트는 어디에 붙여 넣나요?',
              'ChatGPT, Claude, Gemini 등 사용하는 AI 대화창이면 됩니다. 위자드의 「1클릭 복사」로 복사한 뒤 대화창에 붙여 넣고, 마지막에 실제 상황 메모를 덧붙이면 됩니다.')
         ],
-        'cta': ('보고서 프롬프트 만들기', 'public', 'ops', 'program', 'report', 'doc:internal|goal:status|tone:brief'),
+        'cta': ('보고서 프롬프트 만들기', 'public', 'biz', 'program', 'report', 'doc:internal|goal:status|tone:brief'),
         'related': ['official-document', 'meeting-summary', 'issue-review']
     },
     {
@@ -103,7 +103,7 @@ PAGES = [
             ('기관 이름이나 문서 번호가 자동으로 들어가나요?',
              '아니요. 실제 기관명·문서 번호는 넣지 않고, 사용자가 메모에 적은 값을 그 자리에 배치합니다. 확인되지 않은 번호를 지어내지 않도록 가드레일이 켜져 있습니다.')
         ],
-        'cta': ('공문 프롬프트 만들기', 'public', 'ops', 'admin', 'collab', 'cTarget:dept|cWhy:coop|cForm:cover'),
+        'cta': ('공문 프롬프트 만들기', 'public', 'offc', 'admin', 'collab', 'cTarget:dept|cWhy:coop|cForm:cover'),
         'related': ['public-report', 'business-email', 'meeting-summary']
     },
     {
@@ -146,7 +146,7 @@ PAGES = [
             ('수식이 길어서 이해가 어려울 때는?',
              '설명 수준에서 「원리까지 간단히」를 고르면 각 함수의 역할과 계산 순서를 풀어 설명합니다. 초보자 모드는 복붙용 수식과 적용 위치만 짧게 제시합니다.')
         ],
-        'cta': ('엑셀 프롬프트 만들기', 'public', 'ops', 'bsc', 'excel', 'tool:excel|xl:build|depth:beginner'),
+        'cta': ('엑셀 프롬프트 만들기', 'public', 'biz', 'performance', 'excel', 'tool:excel|xl:build|depth:beginner'),
         'related': ['public-report', 'meeting-summary', 'issue-review']
     },
     {
@@ -187,7 +187,7 @@ PAGES = [
             ('메일 본문만 받을 수 있나요?',
              '가능합니다. 가드레일에서 「바로 복붙할 본문만 출력」을 켜면 인사말·설명 없이 본문만 나옵니다.')
         ],
-        'cta': ('이메일 프롬프트 만들기', 'public', 'ops', 'complaint', 'mail', 'mailTo:vendor|mailWhy:push|mailTone:soft'),
+        'cta': ('이메일 프롬프트 만들기', 'public', 'offc', 'complaint', 'mail', 'mailTo:vendor|mailWhy:push|mailTone:soft'),
         'related': ['official-document', 'public-report', 'issue-review']
     },
     {
@@ -227,7 +227,7 @@ PAGES = [
             ('긴 보고서 요약에도 쓸 수 있나요?',
              '가능합니다. 원문 성격에서 「긴 보고서·기사」를 고르면 핵심 주장 → 근거 → 한계 순서로 요약합니다.')
         ],
-        'cta': ('요약 프롬프트 만들기', 'public', 'ops', 'operation', 'summary', 'src:meeting|focus:todo|len:half'),
+        'cta': ('요약 프롬프트 만들기', 'public', 'biz', 'sop', 'summary', 'src:meeting|focus:todo|len:half'),
         'related': ['public-report', 'excel-automation', 'issue-review']
     },
     {
@@ -396,7 +396,7 @@ def render(p):
 
     <p class="lp-cta-row">
       <a class="lp-cta" href="{href}">{cta_label} →</a>
-      <span class="lp-cta-note">4단계 선택, 30초면 끝납니다. 설치·회원가입 없이 무료입니다.</span>
+      <span class="lp-cta-note">3단계 선택, 30초면 끝납니다. 설치·회원가입 없이 무료입니다.</span>
     </p>
 
     <section>

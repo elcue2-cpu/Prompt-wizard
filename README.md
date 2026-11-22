@@ -1,16 +1,21 @@
 # Prompt Wizard
 
-공공기관·공무원 실무 프롬프트를 4단계 질문으로 조립하는 정적 웹앱입니다.
+공공기관·공무원 8대 분야 62개 업무의 실무 프롬프트를 3단계 질문(분야 → 업무 → 결과물)으로 조립하는 정적 웹앱입니다.
 빌드 도구 없이 `index.html`을 열면 바로 동작합니다(로컬 `file://` 포함).
 
 - 서비스: https://elcue2-cpu.github.io/Prompt-wizard/ (대문자 `P`)
-- 태그: `v3-final`(v3 기준점), `v4.0`(5~7단계 포함 배포본)
+- 태그: `v3-final`(v3 기준점), `v4.0`(4직무 23업무), `v4.1`(8분야 62업무·216 템플릿 카드·자연어 검색)
 
-## 지금 되는 것 (v4 전체)
+## 지금 되는 것 (v4.1)
 
 - **상위 카테고리 5개** — `공공기관·공무원`(live) / `일반기업·회사원` · `자영업·소상공인` · `대학생·취준생` · `일상·생활·재테크`(준비 중). 준비 중 탭에는 `준비 중` 배지가 붙고, 누르면 **화면 전환 없이** 가운데 모달(`role="dialog"`·`aria-modal`)로 카테고리 이름·아이콘·“🚧 준비 중인 카테고리예요”·예정 기능 3줄·`[확인]`을 보여 줍니다. 이때 현재 카테고리·위자드 선택·에디터 내용은 그대로입니다(배경 클릭·ESC·✕로 닫기)
-- **4단계 위자드** — STEP 01 직무(4종) → STEP 02 세부 업무(8/8/4/3=23개) → STEP 03 결과물(6종) → STEP 04 결과물별 세부 조건(필수 + 접힌 선택 항목) + 메모 + 가드레일
-- **공통 조립 엔진** — 역할·직무맥락·요청·상황·출력형식·문체·세부요구·관점·분량·유의사항·검증 11문단
+- **자연어 업무 검색(API 호출 0)** — STEP 01 상단 검색창에 “전기실 정기점검 결과보고서”처럼 쓰면 분야›업무›결과물을 바로 추천하고, 누르면 그 업무로 이동합니다(정규화·동의어·가점 점수식, 회귀 20문항 고정)
+- **8대 분야 · 62업무** — 사무·행정 / 인사·재무 / 기획·PM / IT·보안 / 기술 / 시설 / 현장 / 안전. 분야별 전문가 사고 프레임(판단 5단계·필수 질문 4~5개·검증 5기준·문체)이 질문과 검증을 바꿉니다
+- **3단계 위자드** — STEP 01 분야(8장) → STEP 02 세부 업무(6~9개) → STEP 03 업무 전용 특화 템플릿 카드(3~4장) + 공통 결과물 7종 → STEP 04 분야 공통 조건 + 문서 조건 + 메모 + 가드레일
+- **특화 템플릿 216장(고유 정의 164종)** — 점검표·대장·일지·공문·보고서·품질검토. 카드를 고르면 상속 결과물·미리 채운 칩(preset)이 화면에 보이고 전용 질문 1개가 붙습니다
+- **7번째 결과물 `표·서식`** — 점검표·일지·대장은 수식 문장 대신 표 머리글·기재 요령·서명란으로 조립합니다
+- **공통 조립 엔진** — 역할·맥락·요청·분야 프레임·상황·형식·문체·규칙·조건·관점·분량·유의사항·검증 13문단(프레임·조건은 해당할 때만)
+- **하위 호환 별칭** — `?job=ops&task=bsc` 같은 구 URL·즐겨찾기·최근 기록을 `biz/performance`로 풀어 열고, 주소창은 새 id로 되씁니다(localStorage `schema=2` 마이그레이션)
 - **v3 에디터 그대로** — 실시간 타이핑(15ms), 바뀐 문단 하이라이트, 커서, 직접 수정 보호(`선택이 바뀌었어요 · ↻ 자동 생성 반영`), 1클릭 복사, 챗GPT 열기(긴 프롬프트는 복사 후 이동), 후속 팁, 모바일 sticky 카드 + `전체 보기` 시트
 - **공문 갑지 분기 유지** — `타 부서·대외 협조공문`만 갑지, 감사·의회·계약은 개조식
 - **빠른 시작 5종** — 보고서·공문·엑셀·눈치 보이는 이메일·회의록 요약. 누르면 직무/업무/결과물/세부조건이 채워진 STEP 04로 바로 들어갑니다
@@ -35,18 +40,23 @@ assets/img/og-default.png        공유 카드 이미지
 assets/js/data/manifest.js       로드 순서 상수 (index.html과 대조 검사)
 assets/js/data/config.js         실행 설정 (ads.enabled, urlSync)
 assets/js/data/categories.js     상위 카테고리 5개
-assets/js/data/jobs-office.js    직무 4종
-assets/js/data/tasks-office.js   세부 업무 23개 (v3 키 21개 보존 + 2개 추가)
-assets/js/data/outputs-office.js 결과물 6종 (질문·문장 뼈대·팁·예시)
-assets/js/data/options-office.js 선택지 사전 (불변 키 + 화면 문구)
+assets/js/data/domains.js        8개 직무 분야 (jobs = domains)
+assets/js/data/tasks-office.js   세부 업무 62개 (기존 23업무 key·need 문장 보존 + 신규 39)
+assets/js/data/templates-office.js 특화 템플릿 164정의 / 카드 216장 / 업무별 카드 순서
+assets/js/data/frames-office.js  분야별 사고 프레임 8종 (판단·질문·검증·문체)
+assets/js/data/taxonomy-alias.js 구 업무·직무 id 별칭 (schema 2)
+assets/js/data/search-synonyms.js 검색 동의어 사전 (41그룹)
+assets/js/data/outputs-office.js 결과물 7종 (질문·문장 뼈대·팁·예시, 표·서식 포함)
+assets/js/data/options-office.js 선택지 사전 (불변 키 + 화면 문구 + 표·서식·템플릿 전용)
 assets/js/data/guards.js         가드레일 4종
 assets/js/data/quickstart.js     빠른 시작 5종 프리셋
-assets/js/engine.js              문단 조립 엔진
+assets/js/engine.js              문단 조립 엔진 (프레임·조건·템플릿 검증 결합)
+assets/js/search.js              자연어 업무 검색 엔진 (부팅 시 인덱스 1회 생성)
 assets/js/quality.js             품질 점검 5지표
 assets/js/store.js               즐겨찾기·최근 (localStorage, 실패 시 무해 폴백)
 assets/js/ads.js                 애드센스 슬롯 (enabled=false면 아무것도 안 함)
 assets/js/editor.js              타이핑·직접수정·복사·챗GPT·모바일
-assets/js/app.js                 4단계 위자드 UI·상태·프리셋·부팅
+assets/js/app.js                 3단계 위자드 UI·검색·템플릿·별칭·마이그레이션·부팅
 ```
 
 데이터는 `fetch` 대신 `.js` 전역 대입(`window.PW.data`)으로 읽습니다. ES module·JSON fetch는 `file://`에서 막히기 때문입니다.
@@ -59,13 +69,14 @@ assets/js/app.js                 4단계 위자드 UI·상태·프리셋·부팅
 bash work/pw_verify_v4.sh
 ```
 
-- `work/pw_check_v4.py` — 구조·로드 순서·HTML/CSS/JS 문법·DOM 참조·데이터(21키 보존, need 해시 일치, 8/8/4/3)·결과물 6종·갑지 분기·카테고리 5개·준비 중 모달 마크업·에디터 불변식·문장 보존·빠른 시작/품질/저장 모듈·랜딩 6종·sitemap/robots·canonical 대문자·광고 꺼짐·민감정보 0건
-- `work/run_pw_sim_v4.py` + `work/pw_sim_v4.js` — quickjs 런타임 352개 단언(4직무 × 6결과물 24조합, 공문 갑지/본문만, 타이핑·직접수정 보호, 복사·챗GPT, 모바일, v3 문장 패리티 120문단, 빠른 시작 5종, 품질 5지표 경계, 즐겨찾기/최근·저장소 차단, URL 프리셋) + URL 프리셋 부팅 13개 단언
+- `work/pw_check_v4.py` — 구조·로드 순서·HTML/CSS/JS 문법·DOM 참조·데이터(8분야/62업무/7결과물/8프레임/216카드·164정의/별칭 23+4/동의어/검색 20문항)·기존 23업무 need 해시·detailLabel 보존·preset 키·값 유효·공유 템플릿 이름 일관·갑지 분기·카테고리 5개·준비 중 모달·에디터 불변식·문장 보존·랜딩 6종·민감정보 0건
+- `work/run_pw_sim_v4.py` + `work/pw_sim_v4.js` — quickjs 런타임 481개 단언(8분야 × 7결과물 56조합, 템플릿 카드·preset·전용 질문, 분야 프레임 조건 반영, 공문 갑지/본문만, 타이핑·직접수정 보호, 복사·챗GPT, 모바일, v3 문장 패리티 120문단, 구 URL 8종·localStorage 마이그레이션, 검색 화면·회귀 20문항, 빠른 시작 5종, 품질, 즐겨찾기/최근, URL 프리셋) + 부팅 13개 단언
+- `work/gen_pw_v41_data.py` — 8분야·62업무·216카드 데이터 생성기(설계서 §4.4 표 파싱, 기존 23업무 문장은 `work/pw_v41_legacy_tasks.json`에서 보존)
 - `work/pw_v3_snapshot.html` · 태그 `v3-final` — v3 배포본(md5 `70c3f100…`) 기준점
 
 ## 배포
 
-`./deploy.sh` — v4 검증 게이트 통과 → main 푸시 → `v4.0` 태그 → Pages 응답·새 파일 반영 확인.
+`./deploy.sh` — v4.1 검증 게이트 통과 → main 푸시 → 태그 → Pages 응답·새 파일 반영 확인.
 게이트를 끄고 배포하는 경로는 없습니다(`PW_VERIFY`로 경로만 바꿀 수 있음).
 
 ## 아직 사용자 확인이 필요한 것
