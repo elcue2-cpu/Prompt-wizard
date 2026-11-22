@@ -22,7 +22,8 @@ window.PW = window.PW || {};
     guards: {},
     step: 1,
     lastTaskByJob: {},
-    moreOpen: false
+    moreOpen: false,
+    qOpen: false
   };
   D.guards.forEach(function (g) { if (g.on) state.guards[g.id] = true; });
 
@@ -33,6 +34,9 @@ window.PW = window.PW || {};
   var renderedCat = '__init__';
   var prevPct = -1;
   var rafPending = false;
+  var qSig = '';
+  var urlTimer = null;
+  var renderCount = 0;
 
   function $(id) { return document.getElementById(id); }
   function h(tag, cls, text) {
@@ -72,7 +76,21 @@ window.PW = window.PW || {};
     plannedDesc: $('plannedDesc'),
     plannedExamples: $('plannedExamples'),
     plannedPlans: $('plannedPlans'),
-    plannedGo: $('plannedGo')
+    plannedGo: $('plannedGo'),
+    quickStart: $('quickStart'),
+    qualityPanel: $('qualityPanel'),
+    qualityToggle: $('qualityToggle'),
+    qualityBody: $('qualityBody'),
+    qualityScore: $('qualityScore'),
+    qualityLabel: $('qualityLabel'),
+    qualityList: $('qualityList'),
+    shelfCard: $('shelfCard'),
+    favAdd: $('favAdd'),
+    favClear: $('favClear'),
+    favEmpty: $('favEmpty'),
+    favList: $('favList'),
+    recentEmpty: $('recentEmpty'),
+    recentList: $('recentList')
   };
 
   /* ---------------- 조회 도우미 ---------------- */
@@ -477,9 +495,376 @@ window.PW = window.PW || {};
     return o ? o.tips : D.genericTips;
   }
 
+  /* ---------------- 빠른 시작 ---------------- */
+
+  function buildQuickStart() {
+    if (!els.quickStart) return;
+    els.quickStart.innerHTML = '';
+    (D.quickStart || []).forEach(function (q) {
+      var b = h('button', 'qs-btn');
+      b.type = 'button';
+      b.setAttribute('data-quick', q.id);
+      if (q.desc) b.setAttribute('title', q.desc);
+      b.appendChild(h('span', 'qs-icon', q.icon));
+      b.appendChild(h('span', 'qs-name', q.label));
+      b.appendChild(h('span', 'qs-desc', q.desc || ''));
+      els.quickStart.appendChild(b);
+    });
+  }
+
+  function quickById(id) {
+    var list = D.quickStart || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function applyQuick(id) {
+    var q = quickById(id);
+    if (!q) return false;
+    if (PW.editor.isEditing()) PW.editor.setEditing(false);
+    state.cat = q.cat || D.liveCategoryId;
+    state.job = q.job;
+    state.task = q.task;
+    if (q.job && q.task) state.lastTaskByJob[q.job] = q.task;
+    state.out = q.out;
+    state.answersByOut[q.out] = {};
+    state.answers = state.answersByOut[q.out];
+    state.moreOpen = false;
+    state.step = 4;
+    applyOpt(q.opt ? String(q.opt).split('|') : []);
+    renderedJob = '__preset__';
+    renderedTask = '__preset__';
+    renderedOut = '__preset__';
+    render();
+    recordRecent();
+    var sec = $('wstep4');
+    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (els.liveStatus) els.liveStatus.textContent = q.label + ' 프리셋으로 시작했습니다. 필요한 값만 바꿔 보세요.';
+    PW.editor.toast('「' + q.label + '」 프리셋으로 시작했어요. 빈 칸만 채우면 됩니다.');
+    return true;
+  }
+
+  /* ---------------- URL 프리셋 ---------------- */
+
+  function dec(s) {
+    var t = String(s == null ? '' : s).replace(/\+/g, ' ');
+    try { return decodeURIComponent(t); } catch (e) { return t; }
+  }
+
+  function enc(s) {
+    try { return encodeURIComponent(String(s == null ? '' : s)); } catch (e) { return String(s); }
+  }
+
+  /* ?cat=&job=&task=&out=&opt=키:값|키:값 — 알 수 없는 값은 조용히 무시한다 */
+  function parsePreset(search) {
+    var s = String(search || '').replace(/^\?/, '');
+    if (!s) return null;
+    var preset = {};
+    var has = false;
+    s.split('&').forEach(function (pair) {
+      if (!pair) return;
+      var i = pair.indexOf('=');
+      var k = dec(i < 0 ? pair : pair.slice(0, i));
+      var v = dec(i < 0 ? '' : pair.slice(i + 1));
+      if (!v) return;
+      if (k === 'opt') { preset.opt = v.split('|').filter(function (x) { return !!x; }); has = true; }
+      else if (k === 'cat' || k === 'job' || k === 'task' || k === 'out') { preset[k] = v; has = true; }
+    });
+    return has ? preset : null;
+  }
+
+  function applyOpt(tokens) {
+    var out = currentOutput();
+    if (!out || !tokens || !tokens.length) return false;
+    var a = answersFor(state.out);
+    var any = false;
+    out.asks.forEach(function (ask) {
+      var opts = D.options[ask.opt] || [];
+      for (var i = 0; i < tokens.length && !a[ask.key]; i++) {
+        var tok = tokens[i];
+        for (var j = 0; j < opts.length; j++) {
+          if (opts[j].value === tok) { a[ask.key] = tok; any = true; break; }
+          var prefix = ask.key + ':';
+          if (tok.indexOf(prefix) === 0 && opts[j].value === tok.slice(prefix.length)) {
+            a[ask.key] = opts[j].value; any = true; break;
+          }
+        }
+      }
+    });
+    return any;
+  }
+
+  function applyPreset(p) {
+    if (!p) return false;
+    var applied = false;
+    if (p.cat) {
+      var c = E.byId(D.categories, p.cat);
+      if (c && c.status === 'live') { state.cat = p.cat; applied = true; }
+    }
+    if (p.job) {
+      var j = E.byId(D.jobs, p.job);
+      if (j && (!p.cat || j.cat === state.cat)) { state.job = p.job; applied = true; }
+    }
+    if (p.task) {
+      var t = E.byId(D.tasks, p.task);
+      if (t && (!state.job || t.jobId === state.job)) {
+        state.task = p.task;
+        if (!state.job) state.job = t.jobId;
+        state.lastTaskByJob[t.jobId] = p.task;
+        applied = true;
+      }
+    }
+    if (p.out) {
+      var o = E.byId(D.outputs, p.out);
+      if (o) {
+        state.out = p.out;
+        if (!state.answersByOut[p.out]) state.answersByOut[p.out] = {};
+        state.answers = state.answersByOut[p.out];
+        applied = true;
+      }
+    }
+    if (state.out && p.opt && p.opt.length) applyOpt(p.opt);
+    if (!isLive()) {
+      state.job = null; state.task = null; state.out = null; state.answers = {};
+      return applied;
+    }
+    state.step = state.out ? 4 : (state.task ? 3 : (state.job ? 2 : 1));
+    renderedJob = '__preset__';
+    renderedTask = '__preset__';
+    renderedOut = '__preset__';
+    return applied;
+  }
+
+  function applyUrlPreset() {
+    var search = '';
+    try { search = (typeof location !== 'undefined' && location.search) || ''; } catch (e) { search = ''; }
+    var p = parsePreset(search);
+    if (!p) return false;
+    return applyPreset(p);
+  }
+
+  function stateQuery() {
+    if (!state.cat) return '';
+    var parts = [];
+    if (state.cat) parts.push('cat=' + enc(state.cat));
+    if (state.job) parts.push('job=' + enc(state.job));
+    if (state.task) parts.push('task=' + enc(state.task));
+    if (state.out) parts.push('out=' + enc(state.out));
+    var a = state.out ? answersFor(state.out) : {};
+    var vals = Object.keys(a).map(function (k) { return a[k]; }).filter(function (v) { return !!v; });
+    if (vals.length) parts.push('opt=' + enc(vals.join('|')));
+    return parts.length ? '?' + parts.join('&') : '';
+  }
+
+  function scheduleUrlSync() {
+    if (!(PW.config && PW.config.urlSync)) return;
+    if (!state.job) return;
+    if (typeof window.matchMedia !== 'function') return;
+    var desktop = false;
+    try { desktop = window.matchMedia('(min-width:1025px)').matches; } catch (e) { desktop = false; }
+    if (!desktop) return;
+    if (urlTimer) window.clearTimeout(urlTimer);
+    urlTimer = window.setTimeout(function () {
+      urlTimer = null;
+      try {
+        if (typeof history === 'undefined' || !history.replaceState) return;
+        history.replaceState(null, '', stateQuery() || location.pathname);
+      } catch (e) { /* 주소를 못 바꾸는 환경은 무시 */ }
+    }, 400);
+  }
+
+  /* ---------------- 품질 점검 ---------------- */
+
+  function qualityContext() {
+    var o = currentOutput();
+    var req = o ? o.asks.filter(function (a) { return a.required; }) : [];
+    var a = state.out ? answersFor(state.out) : {};
+    var done = 0;
+    req.forEach(function (q) { if (a[q.key]) done++; });
+    return {
+      job: currentJob(), out: o, answers: a, memo: state.memo, guards: state.guards,
+      requiredKeys: req.map(function (q) { return q.key; }), requiredAnswered: done
+    };
+  }
+
+  function renderQuality() {
+    if (!els.qualityPanel) return;
+    var show = isLive() && !!state.out;
+    els.qualityPanel.hidden = !show;
+    if (!show) {
+      qSig = '';
+      return;
+    }
+    var res = PW.quality.evaluate(qualityContext());
+    var missing = res.missing.map(function (m) { return m.key; }).join(',');
+    var sig = res.score + '|' + (state.qOpen ? 1 : 0) + '|' + missing;
+    els.qualityPanel.classList.toggle('is-low', res.score < 60);
+    els.qualityPanel.classList.toggle('is-open', !!state.qOpen);
+    if (sig === qSig) return;
+    qSig = sig;
+    els.qualityScore.textContent = String(res.score);
+    els.qualityLabel.textContent = res.label;
+    els.qualityToggle.setAttribute('aria-expanded', state.qOpen ? 'true' : 'false');
+    els.qualityBody.hidden = !state.qOpen;
+    els.qualityList.innerHTML = '';
+    res.items.forEach(function (it) {
+      var li = h('li', 'quality-item' + (it.ok ? ' is-ok' : ''));
+      li.setAttribute('data-q-item', it.key);
+      li.appendChild(h('span', 'qi-name', it.label));
+      li.appendChild(h('span', 'qi-score', it.score + '/' + it.max));
+      li.appendChild(h('span', 'qi-advice', it.ok ? '충족' : it.advice));
+      els.qualityList.appendChild(li);
+    });
+  }
+
+  /* ---------------- 즐겨찾기 · 최근 ---------------- */
+
+  function fullSelection() {
+    return {
+      cat: state.cat, job: state.job, task: state.task, out: state.out,
+      answers: state.out ? answersFor(state.out) : {},
+      memo: state.memo, guards: state.guards
+    };
+  }
+
+  function labelOfSelect(sel) {
+    var names = [];
+    var o = sel && sel.out ? E.byId(D.outputs, sel.out) : null;
+    var t = sel && sel.task ? E.byId(D.tasks, sel.task) : null;
+    var j = sel && sel.job ? E.byId(D.jobs, sel.job) : null;
+    if (j) names.push(j.name);
+    if (t) names.push(t.label);
+    if (o) names.push(o.short || o.name);
+    return names.length ? names.join(' · ') : '프롬프트';
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '';
+    try {
+      var d = new Date(ts);
+      var mm = d.getMonth() + 1;
+      var dd = d.getDate();
+      return mm + '/' + dd;
+    } catch (e) { return ''; }
+  }
+
+  function recordRecent() {
+    if (!isLive() || !state.out) return;
+    PW.store.pushRecent({
+      cat: state.cat, job: state.job, task: state.task, out: state.out,
+      answers: answersFor(state.out)
+    });
+    renderShelf();
+  }
+
+  function renderShelf() {
+    if (!els.shelfCard) return;
+    var can = PW.store.available();
+    els.shelfCard.hidden = !can;
+    if (!can) return;
+
+    var favs = PW.store.favorites();
+    els.favList.innerHTML = '';
+    if (els.favEmpty) els.favEmpty.hidden = favs.length > 0;
+    if (els.favClear) els.favClear.hidden = favs.length === 0;
+    favs.forEach(function (f) {
+      var li = h('li', 'shelf-item');
+      var btn = h('button', 'shelf-load');
+      btn.type = 'button';
+      btn.setAttribute('data-fav', f.id);
+      btn.appendChild(h('span', 'shelf-item-title', f.title));
+      btn.appendChild(h('span', 'shelf-item-meta', (f.sel ? labelOfSelect(f.sel) : '') + (f.ts ? ' · ' + fmtDate(f.ts) : '')));
+      li.appendChild(btn);
+      var del = h('button', 'shelf-del');
+      del.type = 'button';
+      del.setAttribute('data-fav-del', f.id);
+      del.setAttribute('aria-label', '이 즐겨찾기 삭제');
+      del.textContent = '✕';
+      li.appendChild(del);
+      els.favList.appendChild(li);
+    });
+
+    var rec = PW.store.recent();
+    els.recentList.innerHTML = '';
+    if (els.recentEmpty) els.recentEmpty.hidden = rec.length > 0;
+    rec.forEach(function (r) {
+      var li = h('li', 'shelf-item');
+      var btn = h('button', 'shelf-load');
+      btn.type = 'button';
+      btn.setAttribute('data-recent', r.sig || '');
+      btn.appendChild(h('span', 'shelf-item-title', labelOfSelect(r)));
+      btn.appendChild(h('span', 'shelf-item-meta', fmtDate(r.ts)));
+      li.appendChild(btn);
+      els.recentList.appendChild(li);
+    });
+
+    els.favAdd.disabled = !(isLive() && !!state.out);
+  }
+
+  function applySelection(sel) {
+    if (!sel) return false;
+    if (sel.cat && E.byId(D.categories, sel.cat)) state.cat = sel.cat;
+    if (sel.job && E.byId(D.jobs, sel.job)) state.job = sel.job;
+    if (sel.task && E.byId(D.tasks, sel.task)) { state.task = sel.task; state.lastTaskByJob[state.job] = sel.task; }
+    if (sel.out && E.byId(D.outputs, sel.out)) {
+      state.out = sel.out;
+      state.answersByOut[sel.out] = sel.answers ? JSON.parse(JSON.stringify(sel.answers)) : {};
+      state.answers = state.answersByOut[sel.out];
+    }
+    if (typeof sel.memo === 'string') {
+      state.memo = sel.memo;
+      if (els.memo) { els.memo.value = sel.memo; els.memoCount.textContent = sel.memo.length + '자'; autoGrow(); }
+    }
+    if (sel.guards) {
+      state.guards = {};
+      D.guards.forEach(function (g) { if (sel.guards[g.id]) state.guards[g.id] = true; });
+    }
+    state.step = state.out ? 4 : (state.task ? 3 : (state.job ? 2 : 1));
+    renderedJob = '__restore__';
+    renderedTask = '__restore__';
+    renderedOut = '__restore__';
+    return true;
+  }
+
+  function loadFavorite(id) {
+    var f = PW.store.favoriteById(id);
+    if (!f) return;
+    if (PW.editor.isEditing()) PW.editor.setEditing(false);
+    applySelection(f.sel);
+    render();
+    if (f.body) PW.editor.setEditing(true, f.body);
+    PW.editor.toast('저장한 프롬프트를 불러왔어요.');
+  }
+
+  function loadRecent(sig) {
+    var list = PW.store.recent();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].sig === sig) {
+        if (PW.editor.isEditing()) PW.editor.setEditing(false);
+        applySelection(list[i]);
+        render();
+        PW.editor.toast('최근 선택으로 돌아갔어요.');
+        return;
+      }
+    }
+  }
+
+  function saveFavorite() {
+    if (!isLive() || !state.out) { PW.editor.toast('먼저 결과물을 골라 주세요.'); return; }
+    var text = PW.editor.settle();
+    if (!text) { PW.editor.toast('프롬프트가 아직 비어 있어요.'); return; }
+    var o = currentOutput();
+    var title = labelOfSelect(fullSelection()) + ' · ' + fmtDate(Date.now());
+    if (o && o.short) title = o.short + ' · ' + title;
+    var rec = PW.store.addFavorite({ title: title, body: text, sel: fullSelection() });
+    renderShelf();
+    PW.editor.toast(rec ? '즐겨찾기에 저장했어요(이 브라우저에만).' : '저장 공간이 막혀 저장하지 못했어요.');
+  }
+
   /* ---------------- 렌더 ---------------- */
 
   function render() {
+    renderCount++;
     syncCatNav();
 
     if (!isLive()) {
@@ -488,6 +873,7 @@ window.PW = window.PW || {};
       PW.editor.setEmpty(true);
       PW.editor.renderTips();
       PW.editor.setProgress(0, '시작 전', false);
+      renderQuality();
       return;
     }
     els.wizardCard.hidden = false;
@@ -532,6 +918,10 @@ window.PW = window.PW || {};
     var bump = stats.pct !== prevPct;
     prevPct = stats.pct;
     PW.editor.setProgress(stats.pct, stats.label, bump);
+
+    renderQuality();
+    if (els.favAdd) els.favAdd.disabled = !(state.out);
+    scheduleUrlSync();
 
     if (changed.length) PW.editor.focusTypingSeg(changed[0]);
   }
@@ -597,6 +987,7 @@ window.PW = window.PW || {};
     state.moreOpen = false;
     if (PW.editor.isEditing()) PW.editor.setEditing(false);
     render();
+    recordRecent();
   }
 
   function toggleAsk(key, value) {
@@ -619,6 +1010,7 @@ window.PW = window.PW || {};
     state.step = 1;
     state.lastTaskByJob = {};
     state.moreOpen = false;
+    state.qOpen = false;
     state.cat = D.liveCategoryId;
 
     els.memo.value = '';
@@ -716,6 +1108,47 @@ window.PW = window.PW || {};
     });
 
     els.resetBtn.addEventListener('click', resetAll);
+
+    if (els.quickStart) {
+      els.quickStart.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-quick]');
+        if (btn) applyQuick(btn.getAttribute('data-quick'));
+      });
+    }
+
+    if (els.qualityToggle) {
+      els.qualityToggle.addEventListener('click', function () {
+        state.qOpen = !state.qOpen;
+        qSig = '';
+        renderQuality();
+      });
+    }
+
+    if (els.favAdd) els.favAdd.addEventListener('click', saveFavorite);
+
+    if (els.favClear) {
+      els.favClear.addEventListener('click', function () {
+        PW.store.clearFavorites();
+        renderShelf();
+        PW.editor.toast('즐겨찾기를 모두 지웠어요.');
+      });
+    }
+
+    if (els.shelfCard) {
+      els.shelfCard.addEventListener('click', function (ev) {
+        var del = ev.target.closest('[data-fav-del]');
+        if (del) {
+          PW.store.removeFavorite(del.getAttribute('data-fav-del'));
+          renderShelf();
+          PW.editor.toast('즐겨찾기에서 지웠어요.');
+          return;
+        }
+        var fav = ev.target.closest('[data-fav]');
+        if (fav) { loadFavorite(fav.getAttribute('data-fav')); return; }
+        var rec = ev.target.closest('[data-recent]');
+        if (rec) { loadRecent(rec.getAttribute('data-recent')); return; }
+      });
+    }
   }
 
   /* ---------------- 시작 ---------------- */
@@ -740,10 +1173,16 @@ window.PW = window.PW || {};
     buildTasks();
     buildOutputs();
     buildAsks();
+    buildQuickStart();
     applyMemoField();
     autoGrow();
     wire();
+
+    /* URL 프리셋은 첫 렌더 전에 적용한다 — 기본 상태를 한 번 쓴 뒤 다시 쓰는 이중 타이핑을 막는다 */
+    applyUrlPreset();
     render();
+    if (PW.ads && PW.ads.boot) PW.ads.boot();
+    renderShelf();
   }
 
   PW.app = {
@@ -751,6 +1190,15 @@ window.PW = window.PW || {};
     render: render,
     computeStats: computeStats,
     stateSig: stateSig,
+    parsePreset: parsePreset,
+    applyPreset: applyPreset,
+    applyQuick: applyQuick,
+    applySelection: applySelection,
+    saveFavorite: saveFavorite,
+    recordRecent: recordRecent,
+    stateQuery: stateQuery,
+    quality: function () { return PW.quality.evaluate(qualityContext()); },
+    renders: function () { return renderCount; },
     selected: function () {
       return {
         cat: state.cat, job: state.job, task: state.task, out: state.out,

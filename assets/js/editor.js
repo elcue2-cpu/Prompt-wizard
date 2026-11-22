@@ -426,14 +426,14 @@ window.PW = window.PW || {};
     }
   }
 
-  function setEditing(on) {
+  function setEditing(on, customText) {
     if (on && !hooks.hasSubject()) {
       toast('먼저 결과물을 골라 주세요.');
       return;
     }
     if (on && streamActive) finishStream();
 
-    var base = promptText();
+    var base = (typeof customText === 'string') ? customText : promptText();
     editing = !!on;
     els.pwEditor.hidden = editing;
     els.pwTextarea.hidden = !editing;

@@ -104,39 +104,97 @@ a{color:inherit;text-decoration:none}
 .step-sub{margin:3px 0 0;font-size:12.5px;color:var(--ink-3);letter-spacing:-.01em}
 
 /* =========================================================
-   Step 1 · 용도 카드
+   빠른 시작 (자주 쓰는 5종 프리셋)
    ========================================================= */
-.purpose-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.purpose{
-  position:relative;display:flex;gap:11px;align-items:flex-start;text-align:left;
-  padding:14px 14px 15px;border-radius:16px;
-  border:1px solid var(--line);background:#fff;cursor:pointer;
-  transition:border-color .18s, box-shadow .18s, transform .18s, background .18s;
+.quickstart{margin:-2px 0 16px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+.qs-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.qs-label{font-size:12px;font-weight:800;color:var(--brand-ink);letter-spacing:-.01em}
+.qs-hint{font-size:11.5px;color:var(--ink-4);letter-spacing:-.01em}
+.qs-list{display:flex;flex-wrap:wrap;gap:6px}
+.qs-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 11px;
+  border-radius:999px;border:1px solid var(--line);background:#fff;
+  cursor:pointer;transition:border-color .16s,background .16s,box-shadow .16s;
 }
-.purpose:hover{border-color:#ccd3e0;box-shadow:0 10px 24px -18px rgba(17,24,39,.55);transform:translateY(-1px)}
-.purpose:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(74,92,245,.16);border-color:#b9c2ff}
-.purpose.is-on{
-  border-color:#b9c2ff;
-  background:linear-gradient(180deg,#f7f8ff 0%,#eef1ff 100%);
-  box-shadow:0 12px 28px -20px rgba(74,92,245,.9);
+.qs-btn:hover{border-color:#b9c2ff;background:#f7f8ff;box-shadow:0 6px 16px -14px rgba(74,92,245,.9)}
+.qs-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,92,245,.16);border-color:#b9c2ff}
+.qs-icon{font-size:13px;line-height:1}
+.qs-name{font-size:12.5px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.qs-desc{display:none;font-size:11.5px;color:var(--ink-3)}
+
+/* =========================================================
+   즐겨찾기 · 최근 프롬프트
+   ========================================================= */
+.shelf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.shelf-title{margin:0;font-size:15px;font-weight:800;letter-spacing:-.025em}
+.shelf-actions{display:flex;gap:6px;flex-wrap:wrap}
+.shelf-group + .shelf-group{margin-top:14px;padding-top:13px;border-top:1px dashed var(--line)}
+.shelf-sub{margin:0 0 7px;font-size:12px;font-weight:800;color:var(--ink-2);letter-spacing:-.01em}
+.shelf-empty{margin:0;font-size:12px;color:var(--ink-4);line-height:1.6}
+.shelf-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.shelf-item{display:flex;align-items:stretch;gap:5px;min-width:0}
+.shelf-load{
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  padding:8px 10px;border-radius:10px;border:1px solid var(--line-2);background:#fafbfd;
+  text-align:left;cursor:pointer;transition:border-color .15s,background .15s;
 }
-.purpose-icon{
-  width:34px;height:34px;flex:none;border-radius:11px;
-  background:#f4f6f9;display:grid;place-items:center;font-size:17px;
-  transition:background .18s, box-shadow .18s;
+.shelf-load:hover{border-color:#ccd3e0;background:#fff}
+.shelf-item-title{font-size:12.5px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shelf-item-meta{font-size:11px;color:var(--ink-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shelf-del{
+  flex:none;width:32px;border-radius:10px;border:1px solid var(--line-2);background:#fff;
+  color:var(--ink-4);font-size:12px;cursor:pointer;transition:color .15s,border-color .15s;
 }
-.purpose.is-on .purpose-icon{background:#fff;box-shadow:0 4px 12px -6px rgba(74,92,245,.55)}
-.purpose-text{min-width:0;padding-top:1px;padding-right:14px}
-.purpose-title{display:block;font-size:14px;font-weight:700;letter-spacing:-.02em;line-height:1.35}
-.purpose-desc{display:block;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.45;letter-spacing:-.01em}
-.purpose.is-on .purpose-desc{color:#6a74a8}
-.purpose-check{
-  position:absolute;top:10px;right:10px;width:17px;height:17px;border-radius:50%;
-  background:var(--brand);color:#fff;font-size:10px;font-weight:800;
-  display:grid;place-items:center;opacity:0;transform:scale(.5);
-  transition:opacity .18s, transform .18s;
+.shelf-del:hover{color:#d64545;border-color:#f3c6c6}
+.shelf-note{margin:12px 0 0;font-size:11px;color:var(--ink-4);line-height:1.6}
+
+/* =========================================================
+   품질 점검 패널
+   ========================================================= */
+.quality{border-top:1px solid var(--line);background:#fff}
+.quality-head{
+  width:100%;display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border:0;background:transparent;cursor:pointer;text-align:left;
 }
-.purpose.is-on .purpose-check{opacity:1;transform:scale(1)}
+.quality-head:hover{background:#fafbfd}
+.quality-score{display:inline-flex;align-items:baseline;gap:1px;color:var(--brand-ink);font-weight:800}
+.quality-score b{font-size:16px;letter-spacing:-.02em}
+.quality-score small{font-size:10.5px;color:var(--ink-3);font-weight:700}
+.quality-title{font-size:12.5px;font-weight:700;letter-spacing:-.01em}
+.quality-label{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ink-3)}
+.quality.is-low .quality-label{color:#c2410c}
+.quality-caret{font-size:10px;color:var(--ink-4);transition:transform .16s}
+.quality.is-open .quality-caret{transform:rotate(180deg)}
+.quality-body{padding:0 14px 12px}
+.quality-list{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:5px}
+.quality-item{display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;gap:8px;font-size:11.5px}
+.qi-name{font-weight:700;color:var(--ink-2);letter-spacing:-.01em}
+.qi-score{font-variant-numeric:tabular-nums;color:var(--ink-4);font-size:10.5px}
+.qi-advice{color:var(--ink-3);line-height:1.5}
+.quality-item.is-ok .qi-name{color:var(--ok)}
+.quality-item.is-ok .qi-advice{color:var(--ink-4)}
+.quality-note{margin:0;font-size:10.5px;color:var(--ink-4)}
+
+/* =========================================================
+   광고 자리 (enabled:false 이면 hidden — 빈 공간도 남기지 않음)
+   ========================================================= */
+.ad-slot{max-width:1440px}
+.ad-slot--start{margin:0 0 2px}
+.ad-slot--end{margin:14px 0 150px;padding:0 14px}
+.ad-slot--main{margin:22px auto 0}
+.ad-dev{
+  padding:18px;border:1px dashed #ccd3e0;border-radius:14px;background:#fafbfd;
+  color:var(--ink-4);font-size:11.5px;text-align:center;
+}
+
+/* =========================================================
+   하단 안내 링크
+   ========================================================= */
+.site-foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line)}
+.foot-links{display:flex;flex-wrap:wrap;gap:6px 14px}
+.foot-links a{font-size:12px;color:var(--ink-2);letter-spacing:-.01em}
+.foot-links a:hover{color:var(--brand-ink);text-decoration:underline}
+.foot-note{margin:10px 0 0;font-size:11.5px;color:var(--ink-4);line-height:1.6}
 
 /* =========================================================
    Step 2 · 질문 / 칩 / 메모
@@ -487,6 +545,14 @@ body.sheet-open{overflow:hidden}
   .preview-col.is-collapsed .gauge-row,
   .preview-col.is-collapsed .prompt-body{display:none}
   .preview-col.is-collapsed .preview-head{border-bottom:none}
+  /* 모바일 sticky 카드에서는 품질 패널·완성영역 광고를 숨기고, 전체 보기 시트에서만 보여 준다 */
+  .quality{display:none}
+  body.sheet-open .quality{display:block}
+  .ad-slot--end{display:none}
+  .ad-slot--start{margin-bottom:0}
+  .quickstart{margin-bottom:14px}
+  .qs-btn{padding:6px 9px}
+  .qs-name{font-size:12px}
   .m-full,.m-toggle{display:inline-flex}
   .sheet-close{display:none}
   .sheet-handle{display:none}
@@ -576,7 +642,7 @@ body.sheet-open{overflow:hidden}
 }
 
 @media (max-width:560px){
-  .purpose-grid{grid-template-columns:1fr}
+  .qs-hint{display:none}
 }
 
 @media (max-width:400px){
@@ -588,7 +654,8 @@ body.sheet-open{overflow:hidden}
 
 @media (max-width:420px){
   .step-title{font-size:15.5px}
-  .purpose-desc{font-size:11px}
+  .quality-item{grid-template-columns:auto auto;row-gap:1px}
+  .qi-advice{grid-column:1 / -1;font-size:11px}
 }
 
 /* =========================================================

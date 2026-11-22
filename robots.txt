@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://elcue2-cpu.github.io/Prompt-wizard/sitemap.xml
