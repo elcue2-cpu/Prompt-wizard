@@ -268,7 +268,7 @@ window.PW = window.PW || {};
   /* ---------------- 스텝 레일 ---------------- */
 
   var RAIL = [
-    { n: 1, label: '직무', short: '직무' },
+    { n: 1, label: '분야', short: '분야' },
     { n: 2, label: '세부 업무', short: '업무' },
     { n: 3, label: '결과물', short: '결과물' },
     { n: 4, label: '세부 조건', short: '조건' }
