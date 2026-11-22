@@ -71,12 +71,15 @@ window.PW = window.PW || {};
     resetBtn: $('resetBtn'),
     liveStatus: $('liveStatus'),
     wizardCard: $('wizardCard'),
-    plannedPanel: $('plannedPanel'),
-    plannedName: $('plannedName'),
-    plannedDesc: $('plannedDesc'),
-    plannedExamples: $('plannedExamples'),
-    plannedPlans: $('plannedPlans'),
-    plannedGo: $('plannedGo'),
+    catModal: $('catModal'),
+    catModalCard: $('catModalCard'),
+    catModalVeil: $('catModalVeil'),
+    catModalClose: $('catModalClose'),
+    catModalIcon: $('catModalIcon'),
+    catModalTitle: $('catModalTitle'),
+    catModalDesc: $('catModalDesc'),
+    catModalList: $('catModalList'),
+    catModalOk: $('catModalOk'),
     quickStart: $('quickStart'),
     qualityPanel: $('qualityPanel'),
     qualityToggle: $('qualityToggle'),
@@ -95,7 +98,6 @@ window.PW = window.PW || {};
 
   /* ---------------- 조회 도우미 ---------------- */
 
-  function liveCat() { return E.byId(D.categories, D.liveCategoryId); }
   function currentCat() { return E.byId(D.categories, state.cat); }
   function isLive() { return !!(currentCat() && currentCat().status === 'live'); }
   function currentJob() { return state.job ? E.byId(D.jobs, state.job) : null; }
@@ -141,13 +143,19 @@ window.PW = window.PW || {};
   function buildCatNav() {
     els.catNav.innerHTML = '';
     D.categories.forEach(function (c) {
-      var btn = h('button', 'cat' + (c.status === 'live' ? ' is-live' : ''));
+      var live = c.status === 'live';
+      var btn = h('button', 'cat' + (live ? ' is-live' : ''));
       btn.type = 'button';
       btn.setAttribute('data-cat', c.id);
       btn.setAttribute('aria-pressed', 'false');
+      if (!live) {
+        /* 준비 중 탭은 화면을 바꾸지 않고 안내 모달만 연다 */
+        btn.setAttribute('aria-haspopup', 'dialog');
+        btn.setAttribute('title', c.name + ' — 준비 중인 카테고리예요');
+      }
       btn.appendChild(h('span', 'cat-ic', c.icon));
       btn.appendChild(h('span', 'cat-name', c.name));
-      if (c.status !== 'live') btn.appendChild(h('span', 'cat-soon', '준비 중'));
+      if (!live) btn.appendChild(h('span', 'cat-soon', '준비 중'));
       els.catNav.appendChild(btn);
     });
   }
@@ -161,38 +169,58 @@ window.PW = window.PW || {};
     });
     var c = currentCat();
     if (els.brandSub) {
-      els.brandSub.textContent = c
-        ? (c.status === 'live' ? c.name + ' 실무 프롬프트' : c.name + ' · 준비 중')
-        : '공공기관·공무원 실무 프롬프트';
+      els.brandSub.textContent = c ? c.name + ' 실무 프롬프트' : '공공기관·공무원 실무 프롬프트';
     }
   }
 
-  function renderPlanned() {
-    var c = currentCat();
-    if (!c || c.status === 'live') {
-      els.plannedPanel.hidden = true;
-      return;
-    }
-    els.wizardCard.hidden = true;
-    els.plannedPanel.hidden = false;
-    els.plannedName.textContent = c.name;
-    els.plannedDesc.textContent = c.description || '';
+  /* ---------------- 준비 중 카테고리 모달 ----------------
+     state.cat·위자드 선택·에디터 내용은 건드리지 않는다(render를 부르지 않는다). */
 
-    els.plannedExamples.innerHTML = '';
+  var modalReturn = null;
+
+  function modalExampleLines(c) {
+    var lines = [];
     (c.examples || []).forEach(function (ex) {
-      var card = h('div', 'example-card');
-      card.appendChild(h('b', null, ex.title));
-      card.appendChild(h('span', null, ex.desc));
-      els.plannedExamples.appendChild(card);
+      if (lines.length < 3 && ex && ex.title) lines.push(ex);
     });
+    if (!lines.length) {
+      (c.plans || []).forEach(function (p) {
+        if (lines.length < 3) lines.push({ title: p, desc: '' });
+      });
+    }
+    return lines;
+  }
 
-    els.plannedPlans.innerHTML = '';
-    (c.plans || []).forEach(function (p) {
-      els.plannedPlans.appendChild(h('li', null, p));
+  function openCatModal(c, fromNode) {
+    if (!c || c.status === 'live' || !els.catModal) return;
+    modalReturn = fromNode || null;
+    if (els.catModalIcon) els.catModalIcon.textContent = c.icon || '🚧';
+    els.catModalTitle.textContent = c.name;
+    els.catModalDesc.textContent = c.description || c.tagline || '';
+    els.catModalList.innerHTML = '';
+    modalExampleLines(c).forEach(function (ex) {
+      var li = h('li', 'modal-item');
+      li.appendChild(h('b', 'mi-title', ex.title));
+      if (ex.desc) li.appendChild(h('span', 'mi-desc', ex.desc));
+      els.catModalList.appendChild(li);
     });
+    els.catModal.hidden = false;
+    els.catModal.classList.add('is-open');
+    els.catModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    if (els.catModalOk && els.catModalOk.focus) els.catModalOk.focus();
+    if (els.liveStatus) els.liveStatus.textContent = c.name + ' 카테고리는 준비 중입니다. 지금 화면은 그대로 둘게요.';
+  }
 
-    var live = liveCat();
-    els.plannedGo.textContent = (live ? live.name : '공공기관·공무원') + ' 도구로 이동';
+  function closeCatModal() {
+    if (!els.catModal || els.catModal.hidden) return;
+    els.catModal.hidden = true;
+    els.catModal.classList.remove('is-open');
+    els.catModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    var back = modalReturn;
+    modalReturn = null;
+    if (back && back.focus) back.focus();
   }
 
   /* ---------------- 스텝 레일 ---------------- */
@@ -803,7 +831,8 @@ window.PW = window.PW || {};
 
   function applySelection(sel) {
     if (!sel) return false;
-    if (sel.cat && E.byId(D.categories, sel.cat)) state.cat = sel.cat;
+    var selCat = sel.cat ? E.byId(D.categories, sel.cat) : null;
+    if (selCat && selCat.status === 'live') state.cat = sel.cat;
     if (sel.job && E.byId(D.jobs, sel.job)) state.job = sel.job;
     if (sel.task && E.byId(D.tasks, sel.task)) { state.task = sel.task; state.lastTaskByJob[state.job] = sel.task; }
     if (sel.out && E.byId(D.outputs, sel.out)) {
@@ -864,18 +893,7 @@ window.PW = window.PW || {};
   function render() {
     renderCount++;
     syncCatNav();
-
-    if (!isLive()) {
-      renderPlanned();
-      els.wizardCard.hidden = true;
-      PW.editor.setEmpty(true);
-      PW.editor.renderTips();
-      PW.editor.setProgress(0, '시작 전', false);
-      renderQuality();
-      return;
-    }
     els.wizardCard.hidden = false;
-    els.plannedPanel.hidden = true;
 
     syncRail();
     els.wstep1.hidden = false;
@@ -935,7 +953,15 @@ window.PW = window.PW || {};
 
   /* ---------------- 동작 ---------------- */
 
-  function setCategory(id) {
+  function setCategory(id, fromNode) {
+    var c = E.byId(D.categories, id);
+    if (!c) return;
+    /* 준비 중 카테고리: 화면 전환 없이 현재 카테고리·위자드·에디터를 그대로 두고 모달만 띄운다 */
+    if (c.status !== 'live') {
+      openCatModal(c, fromNode);
+      return;
+    }
+    closeCatModal();
     if (state.cat === id) return;
     state.cat = id;
     if (PW.editor.isEditing()) PW.editor.setEditing(false);
@@ -1010,6 +1036,7 @@ window.PW = window.PW || {};
     state.moreOpen = false;
     state.qOpen = false;
     state.cat = D.liveCategoryId;
+    closeCatModal();
 
     els.memo.value = '';
     els.memoCount.textContent = '0자';
@@ -1027,12 +1054,23 @@ window.PW = window.PW || {};
     els.catNav.addEventListener('click', function (ev) {
       var btn = ev.target.closest('[data-cat]');
       if (!btn) return;
-      setCategory(btn.getAttribute('data-cat'));
+      setCategory(btn.getAttribute('data-cat'), btn);
     });
 
-    els.plannedGo.addEventListener('click', function () {
-      setCategory(D.liveCategoryId);
-    });
+    if (els.catModal) {
+      if (els.catModalOk) els.catModalOk.addEventListener('click', closeCatModal);
+      if (els.catModalClose) els.catModalClose.addEventListener('click', closeCatModal);
+      if (els.catModalVeil) els.catModalVeil.addEventListener('click', closeCatModal);
+      els.catModal.addEventListener('click', function (ev) {
+        if (ev.target === els.catModal) closeCatModal();   /* 카드 바깥을 누르면 닫힌다 */
+      });
+      document.addEventListener('keydown', function (ev) {
+        if (!ev || ev.key !== 'Escape') return;
+        if (els.catModal.hidden) return;
+        if (ev.preventDefault) ev.preventDefault();
+        closeCatModal();
+      });
+    }
 
     els.stepRail.addEventListener('click', function (ev) {
       var btn = ev.target.closest('[data-step]');
@@ -1165,6 +1203,11 @@ window.PW = window.PW || {};
     });
 
     buildCatNav();
+    /* 마크업의 hidden과 같은 초기 상태를 코드로도 명시한다 */
+    if (els.catModal) {
+      els.catModal.hidden = true;
+      els.catModal.setAttribute('aria-hidden', 'true');
+    }
     buildRail();
     buildJobs();
     buildGuards();
@@ -1197,6 +1240,12 @@ window.PW = window.PW || {};
     stateQuery: stateQuery,
     quality: function () { return PW.quality.evaluate(qualityContext()); },
     renders: function () { return renderCount; },
+    openCatModal: function (id, fromNode) {
+      var c = E.byId(D.categories, id);
+      if (c) openCatModal(c, fromNode);
+    },
+    closeCatModal: closeCatModal,
+    modalOpen: function () { return !!(els.catModal && !els.catModal.hidden); },
     selected: function () {
       return {
         cat: state.cat, job: state.job, task: state.task, out: state.out,

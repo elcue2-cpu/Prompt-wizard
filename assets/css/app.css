@@ -795,25 +795,87 @@ body.sheet-open{overflow:hidden}
 .guard-block{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line)}
 .guard-block .q-label{margin-bottom:10px}
 
-/* 준비 중 카테고리 */
-.planned-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.planned-title{margin:0;font-size:18px;font-weight:800;letter-spacing:-.03em}
-.planned-badge{
-  padding:3px 8px;border-radius:7px;background:#fff4e5;color:#8a5a00;
-  font-size:10.5px;font-weight:800;letter-spacing:-.01em;
+/* 준비 중 카테고리 모달 — 화면은 그대로 두고 이 팝업만 띄운다 */
+body.modal-open{overflow:hidden}
+.modal{
+  position:fixed;inset:0;z-index:160;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
 }
-.planned-desc{margin:8px 0 14px;font-size:13px;color:var(--ink-2);line-height:1.65}
-.planned-examples{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.example-card{
-  display:flex;flex-direction:column;gap:3px;padding:12px 13px;
-  border:1px solid var(--line);border-radius:13px;background:#fbfcfe;
+.modal-veil{
+  position:absolute;inset:0;
+  background:radial-gradient(120% 90% at 50% 0%,rgba(74,92,245,.20) 0%,rgba(15,23,42,.48) 58%,rgba(15,23,42,.60) 100%);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:modalVeil .2s ease both;
 }
-.example-card b{font-size:12.8px;font-weight:800;letter-spacing:-.02em}
-.example-card span{font-size:11.5px;color:var(--ink-3);line-height:1.45}
-.planned-plans{margin-top:18px}
-.planned-plans h3{margin:0 0 7px;font-size:12.5px;font-weight:800;letter-spacing:-.02em;color:var(--ink-2)}
-.planned-plans ul{margin:0;padding-left:18px;color:var(--ink-3);font-size:12px;line-height:1.75}
-.planned-go{margin-top:18px;width:100%}
+.modal-card{
+  position:relative;z-index:1;
+  width:min(430px,100%);
+  max-height:calc(100vh - 48px);overflow-y:auto;
+  padding:30px 26px 24px;
+  border-radius:24px;border:1px solid rgba(255,255,255,.72);
+  background:linear-gradient(180deg,#ffffff 0%,#fbfcff 60%,#f6f8ff 100%);
+  box-shadow:0 40px 90px -36px rgba(15,23,42,.55),0 2px 6px rgba(15,23,42,.06);
+  text-align:center;
+  animation:modalPop .28s cubic-bezier(.18,.9,.28,1.05) both;
+}
+.modal-card:focus{outline:none}
+.modal-card::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:104px;
+  border-radius:24px 24px 0 0;pointer-events:none;
+  background:radial-gradient(82% 100% at 50% 0%,rgba(74,92,245,.15),rgba(74,92,245,0) 74%);
+}
+.modal-x{
+  position:absolute;top:12px;right:12px;z-index:2;
+  width:30px;height:30px;display:grid;place-items:center;
+  border-radius:9px;border:1px solid transparent;background:transparent;
+  color:var(--ink-4);font-size:13px;line-height:1;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.modal-x:hover{background:#f2f4f8;border-color:var(--line);color:var(--ink-2)}
+.modal-x:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,92,245,.2)}
+.modal-ic{
+  width:58px;height:58px;margin:2px auto 13px;border-radius:18px;
+  display:grid;place-items:center;font-size:26px;line-height:1;
+  background:#fff;border:1px solid #e4e8ff;
+  box-shadow:0 14px 26px -18px rgba(74,92,245,.9);
+}
+.modal-kicker{
+  display:inline-flex;align-items:center;gap:4px;
+  margin:0 0 9px;padding:5px 11px;border-radius:999px;
+  background:#fff4e5;color:#a35c00;border:1px solid #ffe4c2;
+  font-size:11.5px;font-weight:800;letter-spacing:-.01em;
+}
+.modal-title{margin:0;font-size:20px;font-weight:800;letter-spacing:-.035em;line-height:1.35}
+.modal-desc{margin:9px 0 0;font-size:13px;color:var(--ink-2);line-height:1.65;letter-spacing:-.01em}
+.modal-list{
+  list-style:none;margin:17px 0 0;padding:14px 16px;
+  border:1px solid var(--line-2);border-radius:14px;background:#fff;
+  display:flex;flex-direction:column;gap:10px;text-align:left;
+  box-shadow:0 1px 2px rgba(17,24,39,.02);
+}
+.modal-item{position:relative;display:flex;flex-direction:column;gap:2px;padding-left:16px}
+.modal-item::before{
+  content:'';position:absolute;left:1px;top:6px;width:6px;height:6px;border-radius:50%;
+  background:var(--brand);box-shadow:0 0 0 3px var(--brand-tint);
+}
+.modal-item .mi-title{font-size:12.8px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.modal-item .mi-desc{font-size:11.8px;color:var(--ink-3);line-height:1.5}
+.modal-note{margin:14px 0 0;font-size:11.8px;color:var(--ink-3);line-height:1.6}
+.modal-note b{color:var(--ink-2);font-weight:800}
+.modal-acts{display:flex;margin-top:18px}
+.modal-ok{width:100%;padding:12px 16px;border-radius:13px}
+@keyframes modalVeil{from{opacity:0}to{opacity:1}}
+@keyframes modalPop{from{opacity:0;transform:translateY(14px) scale(.965)}to{opacity:1;transform:none}}
+@keyframes modalSheet{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@media (max-width:560px){
+  .modal{padding:12px;align-items:flex-end}
+  .modal-card{width:100%;max-height:calc(100vh - 24px);border-radius:22px;padding:26px 20px 20px;animation:modalSheet .26s cubic-bezier(.18,.9,.28,1.05) both}
+  .modal-title{font-size:18.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .modal-veil,.modal-card{animation:none}
+}
 
 @media (max-width:1024px){
   .catnav{padding-bottom:2px}
@@ -824,7 +886,7 @@ body.sheet-open{overflow:hidden}
   .out-grid{grid-template-columns:1fr 1fr}
 }
 @media (max-width:560px){
-  .job-grid,.out-grid,.planned-examples{grid-template-columns:1fr}
+  .job-grid,.out-grid{grid-template-columns:1fr}
   .rail-label{display:none}
   .rail-step{justify-content:center}
 }

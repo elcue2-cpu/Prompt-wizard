@@ -141,21 +141,6 @@
       <!-- 광고 자리 1: 위자드와 안내 사이 (승인 전에는 표시되지 않음) -->
       <div class="ad-slot ad-slot--start" id="adStart" data-ad-slot="start" hidden aria-hidden="true"></div>
 
-      <!-- 준비 중 카테고리 안내 (live가 아닐 때만) -->
-      <section class="card planned" id="plannedPanel" hidden>
-        <div class="planned-head">
-          <h2 class="planned-title" id="plannedName">준비 중</h2>
-          <span class="planned-badge">준비 중</span>
-        </div>
-        <p class="planned-desc" id="plannedDesc"></p>
-        <div class="planned-examples" id="plannedExamples"></div>
-        <div class="planned-plans">
-          <h3>준비하고 있는 도구</h3>
-          <ul id="plannedPlans"></ul>
-        </div>
-        <button type="button" class="btn btn-primary planned-go" id="plannedGo">공공기관·공무원 도구로 이동</button>
-      </section>
-
       <!-- 즐겨찾기 · 최근 프롬프트 (localStorage 사용 가능할 때만) -->
       <section class="card shelf" id="shelfCard" hidden>
         <div class="shelf-head">
@@ -291,6 +276,24 @@
   </span>
   <span class="mb-arrow" aria-hidden="true">▲</span>
 </button>
+
+<!-- 준비 중 카테고리 안내 모달 (화면·위자드 상태는 그대로 두고 이 팝업만 띄운다) -->
+<div class="modal" id="catModal" hidden aria-hidden="true">
+  <div class="modal-veil" id="catModalVeil"></div>
+  <div class="modal-card" id="catModalCard" role="dialog" aria-modal="true"
+       aria-labelledby="catModalTitle" aria-describedby="catModalDesc" tabindex="-1">
+    <button type="button" class="modal-x" id="catModalClose" aria-label="닫기">✕</button>
+    <div class="modal-ic" id="catModalIcon" aria-hidden="true">🏢</div>
+    <p class="modal-kicker">🚧 준비 중인 카테고리예요</p>
+    <h2 class="modal-title" id="catModalTitle">준비 중</h2>
+    <p class="modal-desc" id="catModalDesc"></p>
+    <ul class="modal-list" id="catModalList"></ul>
+    <p class="modal-note">지금 보시던 <b>공공기관·공무원</b> 도구와 작성 중인 내용은 그대로예요.</p>
+    <div class="modal-acts">
+      <button type="button" class="btn btn-primary modal-ok" id="catModalOk">확인</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="sr-only" id="liveStatus" aria-live="polite"></div>
