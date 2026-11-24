@@ -486,9 +486,11 @@ a{color:inherit;text-decoration:none}
     padding:14px 14px 12px;
   }
   .wizard-top{margin-bottom:12px;padding-bottom:10px}
+  /* 이전/다음은 화면 아래에 붙여 둔다 — 긴 카드에서도 버튼을 찾아 내려가지 않게 */
   .wstep-nav{
-    flex:0 0 auto;margin-top:14px;padding:12px 0 0;
+    flex:0 0 auto;margin-top:14px;padding:12px 0 8px;
     background:#fff;border-top:1px dashed var(--line);
+    position:sticky;bottom:0;z-index:4;
   }
   .preview-col{
     order:2;position:static;top:auto;flex:0 0 auto;
