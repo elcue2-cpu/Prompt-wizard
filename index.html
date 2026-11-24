@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/app.css?v=4.3">
+<link rel="stylesheet" href="assets/css/app.css?v=4.4">
 </head>
 <body>
 
@@ -58,6 +58,8 @@
       <section class="card wizard" id="wizardCard">
         <div class="step-rail" id="stepRail" aria-label="진행 단계"></div>
 
+        <!-- 단계 내용 — 모바일에서는 이 영역만 안에서 스크롤된다 -->
+        <div class="wsteps" id="wsteps">
         <!-- STEP 01 직무 분야 -->
         <section class="wstep" id="wstep1">
           <div class="search-box">
@@ -167,6 +169,7 @@
             <div class="guard-list" id="guardrailList" role="group" aria-label="가드레일 선택"></div>
           </div>
         </section>
+        </div>
 
         <!-- 단계 이동 — 한 번에 한 단계만 보이므로 아래에서 이전/다음을 오간다 -->
         <div class="wstep-nav" id="stepNav">
