@@ -479,6 +479,7 @@ a{color:inherit;text-decoration:none}
      하단 고정 바·바텀시트는 없앴다. */
   .workspace{--pw-prev:44vh;display:flex;flex-direction:column;gap:10px}
   .col-left{display:contents}
+  .wizard,.preview-col,.shelf{min-width:0}
   .wizard{
     order:1;flex:0 0 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
     padding:14px 14px 0;
