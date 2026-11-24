@@ -477,9 +477,9 @@ a{color:inherit;text-decoration:none}
      위 = 심플한 질의응답(위자드, 안에서 스크롤), 아래 = 실시간 프롬프트(항상 보임).
      두 칸을 합치면 첫 화면을 꽉 채우고, 즐겨찾기·최근은 그 아래로 내려간다.
      하단 고정 바·바텀시트는 없앴다. */
-  .workspace{--pw-prev:44vh;display:flex;flex-direction:column;gap:10px}
+  .workspace{--pw-prev:44vh;display:flex;flex-direction:column;align-items:stretch;gap:10px}
   .col-left{display:contents}
-  .wizard,.preview-col,.shelf{min-width:0}
+  .wizard,.preview-col,.shelf{min-width:0;width:100%;max-width:100%}
   .wizard{
     order:1;flex:0 0 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
     padding:14px 14px 0;
