@@ -72,14 +72,6 @@ window.PW = window.PW || {};
       tipsBtn: $('tipsBtn'),
       tipsPanel: $('tipsPanel'),
       previewCol: $('previewCol'),
-      mFull: $('mFull'),
-      mToggle: $('mToggle'),
-      mobileBar: $('mobileBar'),
-      mbPct: $('mbPct'),
-      mbFill: $('mbFill'),
-      mbSub: $('mbSub'),
-      sheetClose: $('sheetClose'),
-      sheetBackdrop: $('sheetBackdrop'),
       toast: $('toast'),
       liveStatus: $('liveStatus')
     };
@@ -94,7 +86,6 @@ window.PW = window.PW || {};
   /* =======================================================
      타이핑 스트리밍
      ======================================================= */
-
   function commonPrefix(a, b) {
     var n = Math.min(a.length, b.length);
     var i = 0;
@@ -419,19 +410,11 @@ window.PW = window.PW || {};
       els.pctLabel.textContent = label;
       els.pctLabel.classList.toggle('is-done', pct >= 100);
     }
-    if (els.mbPct) els.mbPct.textContent = pct + '%';
-    if (els.mbFill) els.mbFill.style.width = pct + '%';
-    if (els.mbSub) els.mbSub.textContent = hooks.hasSubject() ? (pct + '% · 눌러서 전체 보기') : '칩을 누르면 문장이 실시간으로 써져요';
-    if (bump && els.mobileBar) {
-      els.mobileBar.classList.remove('bump');
-      void els.mobileBar.offsetWidth;
-      els.mobileBar.classList.add('bump');
-    }
   }
 
   function setEditing(on, customText) {
     if (on && !hooks.hasSubject()) {
-      toast('먼저 결과물을 골라 주세요.');
+      toast('먼저 분야나 결과물을 골라 주세요.');
       return;
     }
     if (on && streamActive) finishStream();
@@ -543,10 +526,8 @@ window.PW = window.PW || {};
   }
 
   /* =======================================================
-     모바일 — sticky 카드 + 전체 보기 시트
+     모바일 — 위자드 아래 프롬프트가 그대로 이어지는 배치(v4.3)
      ======================================================= */
-
-  var mCollapsed = false;
 
   function isMobileView() {
     return !!(window.matchMedia && window.matchMedia('(max-width: 1024px)').matches);
@@ -560,17 +541,10 @@ window.PW = window.PW || {};
     document.documentElement.style.setProperty('--topbar-h', hh + 'px');
   }
 
-  function setCollapsed(v) {
-    mCollapsed = !!v;
-    els.previewCol.classList.toggle('is-collapsed', mCollapsed);
-    els.mToggle.textContent = mCollapsed ? '펼치기' : '접기';
-    els.mToggle.setAttribute('aria-expanded', mCollapsed ? 'false' : 'true');
-  }
-
+  /* 모바일에서는 프롬프트 창이 화면 아래에 따로 놓이므로,
+     타이핑 중인 문단이 창 밖으로 밀리지 않게 창 안에서만 부드럽게 따라간다. */
   function focusTypingSeg(key) {
     if (!key || !isMobileView()) return;
-    if (document.body.classList.contains('sheet-open')) return;
-    if (els.previewCol.classList.contains('is-collapsed')) return;
     var target = els.pwEditor.querySelector('[data-seg="' + key + '"]');
     if (!target || !els.promptBody) return;
     var top;
@@ -584,21 +558,6 @@ window.PW = window.PW || {};
     if (top < 0) top = 0;
     if (els.promptBody.scrollTo) els.promptBody.scrollTo({ top: top, behavior: 'smooth' });
     else els.promptBody.scrollTop = top;
-  }
-
-  function openSheet() {
-    document.body.classList.add('sheet-open');
-    els.previewCol.classList.remove('is-collapsed');
-    els.mobileBar.setAttribute('aria-expanded', 'true');
-    if (els.promptBody) {
-      if (els.promptBody.scrollTo) els.promptBody.scrollTo({ top: 0, behavior: 'auto' });
-      else els.promptBody.scrollTop = 0;
-    }
-  }
-  function closeSheet() {
-    document.body.classList.remove('sheet-open');
-    els.previewCol.classList.toggle('is-collapsed', mCollapsed);
-    els.mobileBar.setAttribute('aria-expanded', 'false');
   }
 
   /* =======================================================
@@ -631,7 +590,7 @@ window.PW = window.PW || {};
     els.copyBtn.addEventListener('click', function () {
       var value = settle();
       if (!value) {
-        toast('먼저 결과물을 골라 주세요.');
+        toast('먼저 분야나 결과물을 골라 주세요.');
         return;
       }
       copyText(value).then(function (ok) {
@@ -655,7 +614,7 @@ window.PW = window.PW || {};
       var value = settle();
       if (!value) {
         ev.preventDefault();
-        toast('먼저 결과물을 골라 주세요.');
+        toast('먼저 분야나 결과물을 골라 주세요.');
         return;
       }
       if (('https://chatgpt.com/?q=' + encodeURIComponent(value)).length > 1900) {
@@ -687,17 +646,7 @@ window.PW = window.PW || {};
       });
     });
 
-    els.mobileBar.addEventListener('click', openSheet);
-    els.mFull.addEventListener('click', openSheet);
-    els.mToggle.addEventListener('click', function () { setCollapsed(!mCollapsed); });
-    els.sheetClose.addEventListener('click', closeSheet);
-    els.sheetBackdrop.addEventListener('click', closeSheet);
-    $('sheetHandle').addEventListener('click', closeSheet);
-
     window.addEventListener('resize', syncTopbarHeight);
-    document.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape') closeSheet();
-    });
   }
 
   PW.editor = {

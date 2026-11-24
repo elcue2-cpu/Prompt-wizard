@@ -1,7 +1,8 @@
 /* =========================================================
-   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.2)
+   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.3)
    입력: state {cat, job, task, out, tplId, answers, memo, guards, orgType, orgName}
    출력: [{key, text}] 문단 배열 — 역할·맥락·요청·프레임·상황·형식·문체·규칙·조건·관점·분량·원칙·검증
+   v4.3: 결과물(out)을 고르기 전에도 분야·업무·소속만으로 역할·맥락·프레임을 조립한다(1단계부터 실시간).
    엔진은 특정 도메인을 모른다. 문장 뼈대는 data/outputs-*.js의 template이 갖고,
    분야 전문성은 data/frames-office.js의 frame이, 문서별 특화는 templates-office.js의 정의가 맡는다.
    v3 문단(역할·맥락·요청·상황·형식·문체·규칙·관점·분량·원칙·검증)은 문장 그대로 보존한다.
@@ -16,6 +17,19 @@ window.PW = window.PW || {};
   /* ---------- 공문 서식 상수 (한 곳에서만 정의해 결과물끼리 공유) ---------- */
   var OFF_HEAD = '공문 갑지 서식으로 작성해 주세요. 제목 → 「1. 관련: [근거 공문·계획]」 → 「2. 위 호와 관련하여 ~ 협조 요청드립니다」 → ';
   var OFF_BODY = '「가. ~ / 나. ~」 세부사항 → 「붙임  1. ~ 1부.」 순서로 두고, 문서 마지막은 「끝.」으로 닫아 주세요. 문장은 「~바랍니다」·「~요청드립니다」로 끝맺고, 요청 사항에는 기한·제출 형식·담당 연락처를 한 줄로 특정해 주세요.';
+
+  /* ---------- 결과물을 고르기 전의 기본 뼈대 (v4.3) ----------
+     STEP 01에서 분야나 소속을 고르면 역할·맥락 문단부터 바로 써 내려가고,
+     결과물을 고르면 그 결과물 template의 전문가·원칙·요청·형식으로 다듬어진다. */
+  var NEUTRAL = {
+    org: '공공기관의',
+    expert: '실무 문서 전문가',
+    backdrop: '대한민국 공공기관·공기업에서 15년 넘게 기안·결재·보고를 다뤄 온 실무 문서 전문가',
+    principle: '결론과 근거 숫자를 앞세워, 읽는 사람이 바로 판단할 수 있는 문서로 정리합니다.'
+  };
+
+  /* 결과물을 고르기 전에 만드는 문단 — 분야(1단계) → 업무·프레임(2단계) */
+  var PARTIAL_ORDER = ['role', 'context', 'frame'];
 
   var BLOCKS = {
     official: OFF_HEAD + OFF_BODY,
@@ -140,18 +154,24 @@ window.PW = window.PW || {};
   /* ① 역할 — 직무를 고르면 그 직무 실무자로 역할을 좁힌다 */
   function roleSegment(tpl, job, st) {
     var org = orgPhrase(st);
-    var who = org ? org + '의' : tpl.org;
-    var lead = job
-      ? '당신은 ' + who + ' ' + job.domain + ' 실무를 15년 넘게 맡아 온 ' + tpl.expert + '입니다.'
-      : '당신은 ' + tpl.backdrop + '입니다.';
+    var lead;
+    if (job) {
+      var who = org ? org + '의' : tpl.org;
+      lead = '당신은 ' + who + ' ' + job.domain + ' 실무를 15년 넘게 맡아 온 ' + tpl.expert + '입니다.';
+    } else if (org) {
+      lead = '당신은 ' + org + '의 ' + tpl.expert + '입니다.';
+    } else {
+      lead = '당신은 ' + tpl.backdrop + '입니다.';
+    }
     return lead + ' ' + tpl.principle;
   }
 
-  /* ② 직무·업무 맥락 */
+  /* ② 직무·업무 맥락 — 업무를 아직 고르지 않았으면 직무까지만 쓴다 */
   function contextSegment(job, task, st) {
-    if (!job || !task) return '';
+    if (!job) return '';
     var org = orgPhrase(st);
     var where = org ? org + '의 ' + job.contextPhrase : job.contextPhrase;
+    if (!task) return '저는 ' + where + ' 직무를 담당하고 있습니다.';
     return '저는 ' + where + ' 직무에서 「' + task.label + '」 업무를 담당하고 있습니다.';
   }
 
@@ -280,24 +300,30 @@ window.PW = window.PW || {};
 
   var ORDER = ['role', 'context', 'request', 'frame', 'situation', 'format', 'style', 'detail', 'cond', 'check', 'limit', 'rule', 'verify'];
 
+  /* 결과물을 고르기 전이라도 소속·분야가 있으면 문장이 시작된다. */
+  function hasSubject(st) {
+    if (!st) return false;
+    return !!(st.orgType || String(st.orgName || '').replace(/\s+/g, '') || st.job || st.task || st.out);
+  }
+
   function build(st) {
     var out = outputOf(st);
-    if (!out) return [];
-    var tpl = out.template || {};
+    if (!out && !hasSubject(st)) return [];
+    var tpl = (out && out.template) || NEUTRAL;
     var a = (st && st.answers) || {};
     var job = jobOf(st);
     var task = taskOf(st);
     var frame = frameOf(job);
     var tplDef = templateOf(st);
     var segs = [];
-    var keys = tpl.segments || ORDER;
+    var keys = out ? (tpl.segments || ORDER) : PARTIAL_ORDER;
 
     keys.forEach(function (key) {
       var text = '';
       if (key === 'role') text = roleSegment(tpl, job, st);
       else if (key === 'context') text = contextSegment(job, task, st);
       else if (key === 'request') text = requestSegment(tpl, a);
-      else if (key === 'frame') text = frameSegment(frame);
+      else if (key === 'frame') text = (out || task) ? frameSegment(frame) : '';
       else if (key === 'situation') text = situationSegment(st);
       else if (key === 'format') text = formatSegment(tpl, a);
       else if (key === 'style') text = styleSegment(tpl, a);
@@ -319,6 +345,9 @@ window.PW = window.PW || {};
     order: ORDER,
     objList: objList,
     memoLines: memoLines,
+    hasSubject: hasSubject,
+    neutral: NEUTRAL,
+    partialOrder: PARTIAL_ORDER,
     orgLabel: orgLabel,
     orgPhrase: orgPhrase,
     jobOf: jobOf,

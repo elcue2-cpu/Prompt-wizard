@@ -13,7 +13,6 @@ window.PW = window.PW || {};
     'assets/js/data/taxonomy-alias.js',
     'assets/js/data/search-synonyms.js',
     'assets/js/data/guards.js',
-    'assets/js/data/quickstart.js',
     'assets/js/engine.js',
     'assets/js/search.js',
     'assets/js/quality.js',

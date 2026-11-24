@@ -6,8 +6,8 @@ set -euo pipefail
 REPO="${1:-elcue2-cpu/prompt-wizard}"
 URL="https://elcue2-cpu.github.io/Prompt-wizard/"
 VERIFY="${PW_VERIFY:-../../work/pw_verify_v4.sh}"
-TAG="${PW_TAG:-v4.2}"
-TAG_MSG="${PW_TAG_MSG:-Prompt Wizard v4.2 — 순차 위저드(한 단계씩)·소속 기관 성격/기관명·느린 타이핑}"
+TAG="${PW_TAG:-v4.3}"
+TAG_MSG="${PW_TAG_MSG:-Prompt Wizard v4.3 — 1단계부터 실시간 프롬프트·빠른 시작 제거·이전/다음 수동 이동·모바일 세로 배치}"
 cd "$(dirname "$0")"
 
 echo "== 0. v4 검증 게이트 =="
@@ -49,7 +49,7 @@ for i in $(seq 1 24); do
 done
 
 echo "== 5. 새 파일 반영 확인 =="
-for path in sitemap.xml robots.txt privacy.html landing/public-report.html assets/js/quality.js assets/js/search.js assets/js/editor.js assets/js/engine.js assets/js/data/config.js assets/js/data/templates-office.js assets/js/data/taxonomy-alias.js; do
+for path in sitemap.xml robots.txt privacy.html landing/public-report.html assets/js/quality.js assets/js/search.js assets/js/editor.js assets/js/engine.js assets/js/data/config.js assets/js/data/manifest.js assets/js/data/templates-office.js assets/js/data/taxonomy-alias.js; do
   code=$(curl -sS -o /dev/null -m 20 -w '%{http_code}' "${URL}${path}" || true)
   echo "  ${path} -> ${code}"
   [ "$code" = "200" ] || echo "  (아직 반영 전일 수 있습니다 — Pages 빌드를 확인하세요)"

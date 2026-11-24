@@ -54,7 +54,6 @@ window.PW = window.PW || {};
     catNav: $('catNav'),
     brandSub: $('brandSub'),
     stepRail: $('stepRail'),
-    quickWrap: $('quickWrap'),
     wstep1: $('wstep1'),
     wstep2: $('wstep2'),
     wstep3: $('wstep3'),
@@ -91,7 +90,6 @@ window.PW = window.PW || {};
     catModalDesc: $('catModalDesc'),
     catModalList: $('catModalList'),
     catModalOk: $('catModalOk'),
-    quickStart: $('quickStart'),
     searchInput: $('searchInput'),
     searchResults: $('searchResults'),
     searchClear: $('searchClear'),
@@ -120,6 +118,11 @@ window.PW = window.PW || {};
 
   function currentCat() { return E.byId(D.categories, state.cat); }
   function isLive() { return !!(currentCat() && currentCat().status === 'live'); }
+  /* v4.3 — 소속·분야·업무·결과물 중 하나라도 고르면 실시간 프롬프트가 시작된다.
+     (예전에는 결과물을 골라야 시작해서 「빠른 시작」을 누르기 전엔 화면이 비어 있었다) */
+  function hasSubject() {
+    return isLive() && E.hasSubject(state);
+  }
   function currentJob() { return state.job ? E.byId(D.jobs, state.job) : null; }
   function currentTask() { return state.task ? E.byId(D.tasks, state.task) : null; }
   function currentOutput() { return state.out ? E.byId(D.outputs, state.out) : null; }
@@ -367,10 +370,10 @@ window.PW = window.PW || {};
     }
     if (!els.stepNavHint) return;
     var msg;
-    if (n === 1) msg = state.job ? '02 세부 업무로 넘어갈 수 있어요.' : '분야를 고르면 02 업무가 열립니다.';
-    else if (n === 2) msg = state.task ? '03 결과물로 넘어갈 수 있어요.' : '세부 업무를 고르면 03 결과물이 열립니다.';
-    else if (n === 3) msg = state.out ? '04 세부 조건으로 넘어갈 수 있어요.' : '결과물을 고르면 04 조건이 열립니다.';
-    else msg = '조건을 채우면 오른쪽 프롬프트가 완성됩니다.';
+    if (n === 1) msg = state.job ? '분야를 골랐어요. 다음 단계에서 세부 업무를 고르세요.' : '분야나 소속을 고르면 오른쪽 프롬프트가 바로 시작됩니다.';
+    else if (n === 2) msg = state.task ? '업무를 골랐어요. 다음 단계에서 결과물을 고르세요.' : '세부 업무를 고르면 오른쪽 맥락 문장이 다듬어집니다.';
+    else if (n === 3) msg = state.out ? '결과물을 골랐어요. 다음 단계에서 조건을 채우세요.' : '결과물을 고르면 오른쪽에 요청·형식·검증 문장이 붙습니다.';
+    else msg = '조건과 메모를 채우면 오른쪽 프롬프트가 완성됩니다.';
     els.stepNavHint.textContent = 'STEP 0' + n + ' — ' + msg;
   }
 
@@ -559,15 +562,12 @@ window.PW = window.PW || {};
 
   function selectTemplate(tplId) {
     if (!applyTemplate(tplId)) return;
-    state.step = 4;
     state.moreOpen = true;
-    state.step = 4;
     render();
     recordRecent();
-    var sec = $('wstep4');
-    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
     var def = currentTpl();
-    if (def) PW.editor.toast('「' + def.name + '」 템플릿을 골랐어요. 미리 채운 칩만 확인하세요.');
+    if (def) PW.editor.toast('「' + def.name + '」 템플릿을 골랐어요. 오른쪽 프롬프트를 확인하세요.');
+    els.liveStatus.textContent = '템플릿을 적용했습니다. 오른쪽 프롬프트에 바로 반영됩니다.';
   }
 
   /* ---------------- STEP 04 세부 조건 ---------------- */
@@ -747,56 +747,6 @@ window.PW = window.PW || {};
   function currentTips() {
     var o = currentOutput();
     return o ? o.tips : D.genericTips;
-  }
-
-  /* ---------------- 빠른 시작 ---------------- */
-
-  function buildQuickStart() {
-    if (!els.quickStart) return;
-    els.quickStart.innerHTML = '';
-    (D.quickStart || []).forEach(function (q) {
-      var b = h('button', 'qs-btn');
-      b.type = 'button';
-      b.setAttribute('data-quick', q.id);
-      if (q.desc) b.setAttribute('title', q.desc);
-      b.appendChild(h('span', 'qs-icon', q.icon));
-      b.appendChild(h('span', 'qs-name', q.label));
-      b.appendChild(h('span', 'qs-desc', q.desc || ''));
-      els.quickStart.appendChild(b);
-    });
-  }
-
-  function quickById(id) {
-    var list = D.quickStart || [];
-    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
-    return null;
-  }
-
-  function applyQuick(id) {
-    var q = quickById(id);
-    if (!q) return false;
-    if (PW.editor.isEditing()) PW.editor.setEditing(false);
-    state.cat = q.cat || D.liveCategoryId;
-    state.job = q.job;
-    state.task = q.task;
-    if (q.job && q.task) state.lastTaskByJob[q.job] = q.task;
-    state.out = q.out;
-    state.tplId = null;
-    state.answersByOut[q.out] = {};
-    state.answers = state.answersByOut[q.out];
-    state.moreOpen = false;
-    state.step = 4;
-    applyOpt(q.opt ? String(q.opt).split('|') : []);
-    renderedJob = '__preset__';
-    renderedTask = '__preset__';
-    renderedOut = '__preset__';
-    render();
-    recordRecent();
-    var sec = $('wstep4');
-    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (els.liveStatus) els.liveStatus.textContent = q.label + ' 프리셋으로 시작했습니다. 필요한 값만 바꿔 보세요.';
-    PW.editor.toast('「' + q.label + '」 프리셋으로 시작했어요. 빈 칸만 채우면 됩니다.');
-    return true;
   }
 
   /* ---------------- 자연어 업무 검색 ---------------- */
@@ -1235,8 +1185,6 @@ window.PW = window.PW || {};
     els.wstep2.hidden = state.step !== 2;
     els.wstep3.hidden = state.step !== 3;
     els.wstep4.hidden = state.step !== 4;
-    /* 빠른 시작은 첫 단계에서만 보여 준다(2~4단계를 가리지 않게) */
-    if (els.quickWrap) els.quickWrap.hidden = state.step !== 1;
     syncStepNav();
 
     syncJobs();
@@ -1268,8 +1216,9 @@ window.PW = window.PW || {};
     syncGuards();
 
     var changed = [];
-    PW.editor.setEmpty(!state.out);
-    if (state.out) changed = PW.editor.setSegments(E.build(state));
+    var live = hasSubject();
+    PW.editor.setEmpty(!live);
+    if (live) changed = PW.editor.setSegments(E.build(state));
     PW.editor.renderTips();
 
     var stats = computeStats();
@@ -1325,10 +1274,9 @@ window.PW = window.PW || {};
       jobTasks(job).forEach(function (t) { if (t.id === remembered) ok = true; });
       state.task = ok ? remembered : null;
     }
-    state.step = 2;   /* 분야를 골랐으니 바로 02 업무로 넘어간다 */
+    /* v4.3 — 자동으로 다음 단계로 넘기지 않는다. 고른 자리에서 오른쪽 프롬프트가 시작되는 걸 본다. */
     render();
-    showStep(2);
-    els.liveStatus.textContent = job.name + ' 직무가 선택되었습니다.';
+    els.liveStatus.textContent = job.name + ' 직무가 선택되었습니다. 오른쪽 프롬프트에 바로 반영됩니다.';
   }
 
   function selectTask(id) {
@@ -1336,16 +1284,15 @@ window.PW = window.PW || {};
     if (state.task === id) {
       state.task = null;
       state.tplId = null;
-      state.step = 2;
       render();
+      els.liveStatus.textContent = '세부 업무 선택을 해제했습니다.';
       return;
     }
     state.task = id;
     state.tplId = null;
     state.lastTaskByJob[state.job] = id;
-    state.step = 3;   /* 업무를 골랐으니 바로 03 결과물로 넘어간다 */
     render();
-    showStep(3);
+    els.liveStatus.textContent = '「' + currentTask().label + '」 업무가 선택되었습니다.';
   }
 
   function selectOut(id) {
@@ -1357,11 +1304,11 @@ window.PW = window.PW || {};
     }
     state.out = id;
     state.answers = answersFor(id);
-    state.step = 4;
     state.moreOpen = false;
     if (PW.editor.isEditing()) PW.editor.setEditing(false);
     render();
     recordRecent();
+    els.liveStatus.textContent = '「' + currentOutput().name + '」 결과물이 선택되었습니다.';
   }
 
   function toggleAsk(key, value) {
@@ -1551,13 +1498,6 @@ window.PW = window.PW || {};
 
     els.resetBtn.addEventListener('click', resetAll);
 
-    if (els.quickStart) {
-      els.quickStart.addEventListener('click', function (ev) {
-        var btn = ev.target.closest('[data-quick]');
-        if (btn) applyQuick(btn.getAttribute('data-quick'));
-      });
-    }
-
     if (els.qualityToggle) {
       els.qualityToggle.addEventListener('click', function () {
         state.qOpen = !state.qOpen;
@@ -1645,7 +1585,7 @@ window.PW = window.PW || {};
 
   function boot() {
     PW.editor.init({
-      hasSubject: function () { return isLive() && !!state.out; },
+      hasSubject: hasSubject,
       sig: stateSig,
       memoEmpty: function () { return E.memoLines(state).length === 0; },
       tips: currentTips,
@@ -1673,7 +1613,6 @@ window.PW = window.PW || {};
     buildOutputs();
     buildTemplates();
     buildAsks();
-    buildQuickStart();
     applyMemoField();
     autoGrow();
     wire();
@@ -1700,7 +1639,7 @@ window.PW = window.PW || {};
     stateSig: stateSig,
     parsePreset: parsePreset,
     applyPreset: applyPreset,
-    applyQuick: applyQuick,
+    hasSubject: hasSubject,
     applyTemplate: applyTemplate,
     selectTemplate: selectTemplate,
     applySearchHit: applySearchHit,
