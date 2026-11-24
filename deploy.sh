@@ -6,8 +6,8 @@ set -euo pipefail
 REPO="${1:-elcue2-cpu/prompt-wizard}"
 URL="https://elcue2-cpu.github.io/Prompt-wizard/"
 VERIFY="${PW_VERIFY:-../../work/pw_verify_v4.sh}"
-TAG="${PW_TAG:-v4.3}"
-TAG_MSG="${PW_TAG_MSG:-Prompt Wizard v4.3 — 1단계부터 실시간 프롬프트·빠른 시작 제거·이전/다음 수동 이동·모바일 세로 배치}"
+TAG="${PW_TAG:-v4.4}"
+TAG_MSG="${PW_TAG_MSG:-Prompt Wizard v4.4 — 질문 카드 7장 좌우 슬라이드·핵심 키워드 문단·모바일 잘림 제거}"
 cd "$(dirname "$0")"
 
 echo "== 0. v4 검증 게이트 =="

@@ -1,8 +1,10 @@
 /* =========================================================
-   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.3)
-   입력: state {cat, job, task, out, tplId, answers, memo, guards, orgType, orgName}
+   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.4)
+   입력: state {cat, job, task, out, tplId, answers, memo, guards, orgType, orgName, keyword}
    출력: [{key, text}] 문단 배열 — 역할·맥락·요청·프레임·상황·형식·문체·규칙·조건·관점·분량·원칙·검증
-   v4.3: 결과물(out)을 고르기 전에도 분야·업무·소속만으로 역할·맥락·프레임을 조립한다(1단계부터 실시간).
+   v4.3: 결과물(out)을 고르기 전에도 분야·업무·소속만으로 역할·맥락·프레임을 조립한다(첫 카드부터 실시간).
+   v4.4: 핵심 키워드(keyword)를 받아 「topic」 문단으로 맥락 바로 뒤에 끼워 넣는다.
+         키워드가 비어 있으면 문단 자체가 생기지 않아 v4.3 출력과 완전히 같다.
    엔진은 특정 도메인을 모른다. 문장 뼈대는 data/outputs-*.js의 template이 갖고,
    분야 전문성은 data/frames-office.js의 frame이, 문서별 특화는 templates-office.js의 정의가 맡는다.
    v3 문단(역할·맥락·요청·상황·형식·문체·규칙·관점·분량·원칙·검증)은 문장 그대로 보존한다.
@@ -29,7 +31,7 @@ window.PW = window.PW || {};
   };
 
   /* 결과물을 고르기 전에 만드는 문단 — 분야(1단계) → 업무·프레임(2단계) */
-  var PARTIAL_ORDER = ['role', 'context', 'frame'];
+  var PARTIAL_ORDER = ['role', 'context', 'topic', 'frame'];
 
   var BLOCKS = {
     official: OFF_HEAD + OFF_BODY,
@@ -62,6 +64,13 @@ window.PW = window.PW || {};
   function memoLines(st) {
     return String((st && st.memo) || '').split('\n').map(function (s) { return s.trim(); })
       .filter(function (s) { return s.length > 0; });
+  }
+
+  /* ---------- 핵심 키워드 (v4.4) ----------
+     사용자가 카드 5에서 적은 한 줄. 쉼표로 여러 개를 적어도 그대로 살린다.
+     비어 있으면 빈 문자열 — 이때는 topic 문단이 생기지 않아 예전 출력과 같다. */
+  function keywordOf(st) {
+    return String((st && st.keyword) || '').replace(/\s+/g, ' ').trim().slice(0, 120);
   }
 
   /* ---------- 데이터 조회 ---------- */
@@ -196,6 +205,14 @@ window.PW = window.PW || {};
     return parts.join(' ');
   }
 
+  /* ③-c 핵심 키워드 — 맥락 바로 뒤에서 이번 작업의 주제를 못 박는다 (v4.4) */
+  function topicSegment(st) {
+    var kw = keywordOf(st);
+    if (!kw) return '';
+    return '이번 작업의 핵심 주제는 「' + kw + '」입니다. 이 주제를 문서의 근거·요청·형식 전반에 반영하고, '
+      + '주제와 무관한 내용은 억지로 채우지 마세요.';
+  }
+
   /* ④ 상황(메모) */
   function situationSegment(st) {
     var lines = memoLines(st);
@@ -298,12 +315,13 @@ window.PW = window.PW || {};
     return parts.join(' ');
   }
 
-  var ORDER = ['role', 'context', 'request', 'frame', 'situation', 'format', 'style', 'detail', 'cond', 'check', 'limit', 'rule', 'verify'];
+  var ORDER = ['role', 'context', 'topic', 'request', 'frame', 'situation', 'format', 'style', 'detail', 'cond', 'check', 'limit', 'rule', 'verify'];
 
   /* 결과물을 고르기 전이라도 소속·분야가 있으면 문장이 시작된다. */
   function hasSubject(st) {
     if (!st) return false;
-    return !!(st.orgType || String(st.orgName || '').replace(/\s+/g, '') || st.job || st.task || st.out);
+    return !!(st.orgType || String(st.orgName || '').replace(/\s+/g, '') || st.job || st.task || st.out
+      || keywordOf(st));
   }
 
   function build(st) {
@@ -322,6 +340,7 @@ window.PW = window.PW || {};
       var text = '';
       if (key === 'role') text = roleSegment(tpl, job, st);
       else if (key === 'context') text = contextSegment(job, task, st);
+      else if (key === 'topic') text = topicSegment(st);
       else if (key === 'request') text = requestSegment(tpl, a);
       else if (key === 'frame') text = (out || task) ? frameSegment(frame) : '';
       else if (key === 'situation') text = situationSegment(st);
@@ -346,6 +365,7 @@ window.PW = window.PW || {};
     objList: objList,
     memoLines: memoLines,
     hasSubject: hasSubject,
+    keywordOf: keywordOf,
     neutral: NEUTRAL,
     partialOrder: PARTIAL_ORDER,
     orgLabel: orgLabel,
@@ -361,6 +381,7 @@ window.PW = window.PW || {};
     segmentTexts: {
       role: roleSegment,
       context: contextSegment,
+      topic: topicSegment,
       request: requestSegment,
       frame: frameSegment,
       situation: situationSegment,

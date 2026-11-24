@@ -473,26 +473,26 @@ a{color:inherit;text-decoration:none}
   .app{padding:10px 12px 14px}
   .card{padding:16px 14px;border-radius:18px}
 
-  /* ── v4.3 모바일: 화면을 위/아래로 나눈다 ──
-     위 = 심플한 질의응답(위자드, 안에서 스크롤), 아래 = 실시간 프롬프트(항상 보임).
-     두 칸을 합치면 첫 화면을 꽉 채우고, 즐겨찾기·최근은 그 아래로 내려간다.
-     하단 고정 바·바텀시트는 없앴다. */
-  .workspace{--pw-prev:42vh;display:flex;flex-direction:column;align-items:stretch;gap:10px}
+  /* ── v4.4 모바일: 자르지 않는다 ──
+     위 = 질문 카드 한 장(자연 높이, 안쪽 스크롤 없음) + 이전/다음 버튼,
+     아래 = 실시간 프롬프트(문서 흐름, 높이 고정 없음).
+     화면을 나눠 담지 않으므로 어떤 카드도 잘리지 않고, 페이지 전체가 스크롤된다. */
+  .workspace{display:flex;flex-direction:column;align-items:stretch;gap:10px}
   .col-left{display:contents}
   .wizard,.preview-col,.shelf{min-width:0;width:100%;max-width:100%}
   .wizard{
-    order:1;flex:0 0 auto;display:flex;flex-direction:column;
-    min-height:0;overflow:hidden;padding:14px 14px 12px;
-    height:max(220px,calc(100dvh - var(--topbar-h,56px) - var(--pw-prev) - 34px));
+    order:1;flex:0 0 auto;
+    height:auto;min-height:0;max-height:none;overflow:visible;
+    padding:14px 14px 12px;
   }
-  .wsteps{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .wizard-top{margin-bottom:12px;padding-bottom:10px}
   .wstep-nav{
-    flex:0 0 auto;margin-top:12px;padding:12px 0 0;
+    flex:0 0 auto;margin-top:14px;padding:12px 0 0;
     background:#fff;border-top:1px dashed var(--line);
   }
   .preview-col{
     order:2;position:static;top:auto;flex:0 0 auto;
-    height:var(--pw-prev);min-height:240px;max-height:52vh;
+    height:auto;min-height:0;max-height:none;
     margin:0;border-radius:16px;border-color:#dde3ef;
     box-shadow:0 14px 30px -28px rgba(17,24,39,.55);
   }
@@ -505,7 +505,7 @@ a{color:inherit;text-decoration:none}
   .gauge-num{font-size:18px;min-width:48px}
   .gauge-tag{font-size:10.5px;min-width:76px}
   .gauge-track{height:6px}
-  .prompt-body{flex:1;min-height:0;max-height:none;padding:10px 12px 12px}
+  .prompt-body{flex:none;min-height:0;max-height:none;overflow:visible;padding:10px 12px 12px}
   .pw-bar{padding-bottom:7px;margin-bottom:8px}
   .pw-status{font-size:10.5px}
   .pw-meta{display:none}
@@ -514,7 +514,7 @@ a{color:inherit;text-decoration:none}
   .pw-seg{margin-bottom:9px}
   .pw-hint{font-size:10.5px}
   .pw-textarea{font-size:12px;line-height:1.72;min-height:120px}
-  .preview-col .empty{padding:14px}
+  .preview-col .empty{padding:18px 14px;min-height:120px}
   .preview-col .empty-art{width:48px;height:48px;border-radius:16px;font-size:19px;margin-bottom:9px}
   .preview-col .empty-title{font-size:12.5px;margin-bottom:3px}
   .preview-col .empty-desc{font-size:11.5px;line-height:1.55;max-width:280px}
@@ -819,6 +819,60 @@ body.modal-open{overflow:hidden}
   .cat{padding:6px 9px;font-size:11px}
   .cat-ic{font-size:12px}
 }
+
+/* =========================================================
+   v4.4 — 질문 카드 7장 슬라이드 위자드
+   카드는 옆으로 나란히 놓고 한 장씩만 보여 준다. 이전/다음은 옆으로 밀리며 바뀐다.
+   ========================================================= */
+.wizard-top{
+  display:flex;align-items:center;gap:10px;
+  margin:0 0 16px;padding:0 0 12px;border-bottom:1px dashed var(--line);
+}
+.wizard-top .step-rail{flex:1 1 auto;min-width:0;margin:0;padding:0;border:0}
+.step-count{
+  flex:none;min-width:42px;text-align:right;
+  font-size:11.5px;font-weight:800;color:var(--brand-ink);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+}
+.wstep-view{position:relative;overflow:hidden}
+.wsteps{position:relative;display:flex;align-items:flex-start}
+.wstep{
+  position:absolute;top:0;left:0;width:100%;min-width:0;
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+.wstep.is-active{position:relative;opacity:1;visibility:visible;pointer-events:auto}
+.wstep.is-leaving{visibility:visible;pointer-events:none}
+.wsteps.slide-next .wstep.is-active{animation:cardInNext .24s cubic-bezier(.22,.85,.25,1) both}
+.wsteps.slide-prev .wstep.is-active{animation:cardInPrev .24s cubic-bezier(.22,.85,.25,1) both}
+.wstep.is-leaving.leave-next{animation:cardOutNext .24s cubic-bezier(.22,.85,.25,1) both}
+.wstep.is-leaving.leave-prev{animation:cardOutPrev .24s cubic-bezier(.22,.85,.25,1) both}
+@keyframes cardInNext{from{opacity:.35;transform:translateX(100%)}to{opacity:1;transform:none}}
+@keyframes cardInPrev{from{opacity:.35;transform:translateX(-100%)}to{opacity:1;transform:none}}
+@keyframes cardOutNext{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-100%)}}
+@keyframes cardOutPrev{from{opacity:1;transform:none}to{opacity:0;transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){
+  .wsteps.slide-next .wstep.is-active,.wsteps.slide-prev .wstep.is-active,
+  .wstep.is-leaving.leave-next,.wstep.is-leaving.leave-prev{animation:none}
+}
+
+/* CARD 05 — 핵심 키워드 */
+.kw-box{padding:14px 14px 15px;border-radius:16px;border:1px solid #e3e8ff;background:linear-gradient(180deg,#f8f9ff 0%,#ffffff 100%)}
+.kw-label{display:block;margin-bottom:8px;font-size:13.5px;font-weight:700;letter-spacing:-.02em}
+#keywordInput{
+  display:block;width:100%;padding:12px 14px;border-radius:12px;border:1px solid #d7dcf5;
+  background:#fff;color:var(--ink);font:inherit;font-size:14px;letter-spacing:-.01em;
+}
+#keywordInput::placeholder{color:var(--ink-4);font-size:13px}
+#keywordInput:focus{outline:none;border-color:#b9c2ff;box-shadow:0 0 0 3px rgba(74,92,245,.12)}
+.kw-examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.kw-chip{
+  padding:6px 11px;border-radius:999px;border:1px dashed #c8d0f0;background:#fff;
+  color:var(--ink-2);font-size:11.5px;font-weight:600;letter-spacing:-.01em;cursor:pointer;
+  transition:border-color .15s,background .15s,color .15s;
+}
+.kw-chip:hover{border-color:#b9c2ff;background:#f4f6ff;color:var(--brand-ink)}
+.kw-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,92,245,.16)}
+.kw-hint{margin:9px 2px 0;font-size:11px;color:var(--ink-3);line-height:1.5}
 
 /* =========================================================
    v4.1 — 자연어 업무 검색 · 특화 템플릿 카드 · 분야 공통 조건

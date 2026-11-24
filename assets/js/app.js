@@ -1,6 +1,8 @@
 /* =========================================================
-   Prompt Wizard — 4단계 위자드 화면과 부팅
-   STEP 01 직무 → STEP 02 세부 업무 → STEP 03 결과물 → STEP 04 세부 조건
+   Prompt Wizard — 카드 7장 슬라이드 위자드 화면과 부팅 (v4.4)
+   카드 1 소속·검색 → 2 분야 → 3 세부 업무 → 4 결과물 → 5 핵심 키워드
+        → 6 세부 조건 → 7 상세 상황·마무리
+   한 번에 한 장만 보이고, 이전/다음으로 옆으로 넘어간다.
    선택 상태만 들고, 문장 조립은 engine, 타이핑·복사는 editor가 맡는다.
    ========================================================= */
 window.PW = window.PW || {};
@@ -19,6 +21,7 @@ window.PW = window.PW || {};
     tplId: null,
     orgType: null,
     orgName: '',
+    keyword: '',
     answersByOut: {},
     answers: {},
     memo: '',
@@ -58,6 +61,14 @@ window.PW = window.PW || {};
     wstep2: $('wstep2'),
     wstep3: $('wstep3'),
     wstep4: $('wstep4'),
+    wstep5: $('wstep5'),
+    wstep6: $('wstep6'),
+    wstep7: $('wstep7'),
+    wstepView: $('wstepView'),
+    wsteps: $('wsteps'),
+    stepCount: $('stepCount'),
+    keywordInput: $('keywordInput'),
+    kwExamples: $('kwExamples'),
     stepNav: $('stepNav'),
     stepPrev: $('stepPrev'),
     stepNext: $('stepNext'),
@@ -69,9 +80,9 @@ window.PW = window.PW || {};
     outGrid: $('outGrid'),
     detailAsks: $('detailAsks'),
     moreAsksBtn: $('moreAsksBtn'),
-    step2Sub: $('step2Sub'),
-    step3Sub: $('step3Sub'),
-    step4Sub: $('step4Sub'),
+    taskSub: $('taskSub'),
+    outSub: $('outSub'),
+    condSub: $('condSub'),
     memo: $('memo'),
     memoLabel: $('memoLabel'),
     memoCount: $('memoCount'),
@@ -280,11 +291,15 @@ window.PW = window.PW || {};
   /* ---------------- 스텝 레일 ---------------- */
 
   var RAIL = [
-    { n: 1, label: '분야', short: '분야' },
-    { n: 2, label: '세부 업무', short: '업무' },
-    { n: 3, label: '결과물', short: '결과물' },
-    { n: 4, label: '세부 조건', short: '조건' }
+    { n: 1, label: '소속·검색', short: '검색' },
+    { n: 2, label: '분야', short: '분야' },
+    { n: 3, label: '세부 업무', short: '업무' },
+    { n: 4, label: '결과물', short: '결과물' },
+    { n: 5, label: '키워드', short: '키워드' },
+    { n: 6, label: '세부 조건', short: '조건' },
+    { n: 7, label: '마무리', short: '마무리' }
   ];
+  var CARD_MAX = 7;
 
   function buildRail() {
     els.stepRail.innerHTML = '';
@@ -299,22 +314,29 @@ window.PW = window.PW || {};
     });
   }
 
+  /* 카드별 완료 표시 — 1·5는 선택 사항이라 비어 있어도 진행에 지장이 없다 */
   function stepDone(n) {
-    if (n === 1) return !!state.job;
-    if (n === 2) return !!state.task;
-    if (n === 3) return !!state.out;
-    var req = requiredAsks();
-    if (!state.out) return false;
-    var a = answersFor(state.out);
-    var done = req.length > 0;
-    req.forEach(function (q) { if (!a[q.key]) done = false; });
-    return done;
-  }
-
-  function stepUnlocked(n) {
-    if (n === 1) return true;
+    if (n === 1) return !!(state.orgType || String(state.orgName || '').trim());
     if (n === 2) return !!state.job;
     if (n === 3) return !!state.task;
+    if (n === 4) return !!state.out;
+    if (n === 5) return !!E.keywordOf(state);
+    if (n === 6) {
+      if (!state.out) return false;
+      var req = requiredAsks();
+      var a = answersFor(state.out);
+      var done = req.length > 0;
+      req.forEach(function (q) { if (!a[q.key]) done = false; });
+      return done;
+    }
+    return !!String(state.memo || '').trim();
+  }
+
+  /* 카드 1·2는 언제나 열려 있고, 뒤 카드는 앞 카드의 선택이 있어야 열린다 */
+  function stepUnlocked(n) {
+    if (n <= 2) return true;
+    if (n === 3) return !!state.job;
+    if (n === 4) return !!state.task;
     return !!state.out;
   }
 
@@ -336,20 +358,67 @@ window.PW = window.PW || {};
      아래 단계의 선택값이 살아 있다. */
 
   function showStep(n) {
-    var sec = $('wstep' + n);
-    if (!sec || !sec.scrollIntoView) return;
-    try { sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-    catch (e) { try { sec.scrollIntoView(); } catch (e2) { /* 스크롤을 막는 환경은 무시 */ } }
+    /* 모바일에서만: 카드가 화면 위로 밀려 올라가 있으면 위자드 머리로 되돌린다 */
+    var card = els.wizardCard;
+    if (!card || !card.getBoundingClientRect || !card.scrollIntoView) return;
+    var mobile = false;
+    try { mobile = !!(window.matchMedia && window.matchMedia('(max-width:1024px)').matches); }
+    catch (e) { mobile = false; }
+    if (!mobile) return;
+    var rect = card.getBoundingClientRect();
+    if (!rect || rect.top >= 44) return;
+    try { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    catch (e) { try { card.scrollIntoView(); } catch (e2) { /* 스크롤을 막는 환경은 무시 */ } }
+  }
+
+  /* 카드가 옆으로 밀리며 바뀌는 240ms 전환 — 방향에 따라 slide-next / slide-prev */
+  var slideTimer = null;
+  function slideCards(fromN, toN) {
+    if (!fromN || !toN || fromN === toN) return;
+    var from = $('wstep' + fromN);
+    var to = $('wstep' + toN);
+    var dir = toN > fromN ? 'next' : 'prev';
+    if (els.wsteps) {
+      els.wsteps.classList.remove('slide-next', 'slide-prev');
+      els.wsteps.classList.add('slide-' + dir);
+      if (slideTimer) window.clearTimeout(slideTimer);
+      slideTimer = window.setTimeout(function () {
+        slideTimer = null;
+        if (els.wsteps) els.wsteps.classList.remove('slide-next', 'slide-prev');
+      }, 280);
+    }
+    if (!from || !to || from === to) return;
+    from.classList.remove('is-active');
+    from.classList.add('is-leaving', 'leave-' + dir);
+    from.setAttribute('aria-hidden', 'true');
+    window.setTimeout(function () {
+      from.classList.remove('is-leaving', 'leave-next', 'leave-prev');
+    }, 280);
+  }
+
+  /* 한 번에 한 장 — 지금 카드만 is-active, 나머지는 aria-hidden + inert */
+  function syncCards() {
+    for (var n = 1; n <= CARD_MAX; n++) {
+      var el = $('wstep' + n);
+      if (!el) continue;
+      var on = n === state.step;
+      el.classList.toggle('is-active', on);
+      if (on) el.removeAttribute('aria-hidden');
+      else el.setAttribute('aria-hidden', 'true');
+      if ('inert' in el) el.inert = !on;
+    }
+    if (els.stepCount) els.stepCount.textContent = state.step + ' / ' + CARD_MAX;
   }
 
   function goStep(n) {
     n = Number(n);
-    if (!(n >= 1 && n <= 4)) return false;
+    if (!(n >= 1 && n <= CARD_MAX)) return false;
     if (n !== state.step && !stepUnlocked(n)) {
-      PW.editor.toast('앞 단계를 먼저 골라 주세요.');
+      PW.editor.toast('앞 카드를 먼저 골라 주세요.');
       return false;
     }
     if (state.step === n) { showStep(n); return false; }
+    slideCards(state.step, n);
     state.step = n;
     render();
     showStep(n);
@@ -358,23 +427,26 @@ window.PW = window.PW || {};
 
   function syncStepNav() {
     var n = state.step;
-    var nextOpen = n < 4 && stepUnlocked(n + 1);
+    var nextOpen = n < CARD_MAX && stepUnlocked(n + 1);
     if (els.stepNav) els.stepNav.setAttribute('data-step', String(n));
     if (els.stepPrev) {
       els.stepPrev.disabled = n <= 1;
-      els.stepPrev.textContent = '← 이전 단계';
+      els.stepPrev.textContent = '← 이전';
     }
     if (els.stepNext) {
       els.stepNext.disabled = !nextOpen;
-      els.stepNext.textContent = n >= 4 ? '마지막 단계' : '다음 단계 →';
+      els.stepNext.textContent = n >= CARD_MAX ? '마지막 카드' : '다음 →';
     }
     if (!els.stepNavHint) return;
     var msg;
-    if (n === 1) msg = state.job ? '분야를 골랐어요. 다음 단계에서 세부 업무를 고르세요.' : '분야나 소속을 고르면 오른쪽 프롬프트가 바로 시작됩니다.';
-    else if (n === 2) msg = state.task ? '업무를 골랐어요. 다음 단계에서 결과물을 고르세요.' : '세부 업무를 고르면 오른쪽 맥락 문장이 다듬어집니다.';
-    else if (n === 3) msg = state.out ? '결과물을 골랐어요. 다음 단계에서 조건을 채우세요.' : '결과물을 고르면 오른쪽에 요청·형식·검증 문장이 붙습니다.';
-    else msg = '조건과 메모를 채우면 오른쪽 프롬프트가 완성됩니다.';
-    els.stepNavHint.textContent = 'STEP 0' + n + ' — ' + msg;
+    if (n === 1) msg = state.job ? '분야를 골랐어요. 다음 카드에서 세부 업무를 고르세요.' : '소속이나 업무를 고르면 오른쪽 프롬프트가 바로 시작됩니다.';
+    else if (n === 2) msg = state.job ? '고른 분야는 오른쪽 역할 문장에 바로 반영됩니다.' : '분야를 고르면 다음 카드에서 세부 업무를 보여 드립니다.';
+    else if (n === 3) msg = state.task ? '업무를 골랐어요. 다음 카드에서 결과물을 고르세요.' : '세부 업무를 고르면 오른쪽 맥락 문장이 다듬어집니다.';
+    else if (n === 4) msg = state.out ? '결과물을 골랐어요. 다음 카드에서 키워드를 더하세요.' : '결과물을 고르면 오른쪽에 요청·형식·검증 문장이 붙습니다.';
+    else if (n === 5) msg = '키워드는 선택이에요. 넣으면 프롬프트가 그 주제를 중심으로 조립됩니다.';
+    else if (n === 6) msg = '조건을 고르면 오른쪽 프롬프트가 그 자리에서 바뀝니다.';
+    else msg = '상황과 장치를 채우면 프롬프트가 완성됩니다.';
+    els.stepNavHint.textContent = '카드 ' + n + ' / ' + CARD_MAX + ' — ' + msg;
   }
 
   /* ---------------- STEP 01 직무 ---------------- */
@@ -434,6 +506,47 @@ window.PW = window.PW || {};
     if (els.orgName && els.orgName.value !== state.orgName) els.orgName.value = state.orgName;
   }
 
+  /* ---------------- CARD 05 핵심 키워드 ---------------- */
+
+  /* 키워드 예시 — 데이터로 만들어 두어 화면과 검증이 같은 목록을 본다 */
+  var KW_EXAMPLES = ['동절기 전기실 정전 대비', '노후 장비 교체 예산', '반복 민원 구간 개선'];
+
+  function buildKwExamples() {
+    if (!els.kwExamples) return;
+    els.kwExamples.innerHTML = '';
+    KW_EXAMPLES.forEach(function (kw) {
+      var b = h('button', 'kw-chip');
+      b.type = 'button';
+      b.setAttribute('data-kw', kw);
+      b.setAttribute('aria-pressed', 'false');
+      b.textContent = kw;
+      els.kwExamples.appendChild(b);
+    });
+  }
+
+  function syncKeyword() {
+    if (els.keywordInput && els.keywordInput.value !== state.keyword) els.keywordInput.value = state.keyword;
+    if (els.kwExamples) {
+      var nodes = els.kwExamples.querySelectorAll('[data-kw]');
+      Array.prototype.forEach.call(nodes, function (n) {
+        var on = n.getAttribute('data-kw') === state.keyword;
+        n.classList.toggle('is-on', on);
+        n.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+  }
+
+  function setKeyword(value, announce) {
+    state.keyword = String(value || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    syncKeyword();
+    render();
+    if (announce && els.liveStatus) {
+      els.liveStatus.textContent = state.keyword
+        ? '핵심 키워드를 프롬프트 주제로 넣었습니다.'
+        : '핵심 키워드를 비웠습니다. 주제 문장 없이 조립합니다.';
+    }
+  }
+
   function toggleOrgType(value) {
     state.orgType = (state.orgType === value) ? null : value;
     render();
@@ -457,9 +570,9 @@ window.PW = window.PW || {};
       els.taskChips.appendChild(b);
     });
     var jobName = job ? job.name : '';
-    els.step2Sub.textContent = job
+    els.taskSub.textContent = job
       ? jobName + ' 분야의 세부 업무 ' + jobTasks(job).length + '개 중 하나를 골라 주세요.'
-      : 'STEP 01에서 직무 분야를 먼저 골라 주세요.';
+      : '앞 카드에서 분야를 먼저 골라 주세요.';
   }
 
   function syncTasks() {
@@ -494,7 +607,7 @@ window.PW = window.PW || {};
       btn.appendChild(h('span', 'out-check', '✓'));
       els.outGrid.appendChild(btn);
     });
-    els.step3Sub.textContent = t
+    els.outSub.textContent = t
       ? '「' + t.label + '」 업무에 맞는 결과물을 추천 순서로 보여 드립니다.'
       : '결과물을 고르면 필요한 세부 조건만 이어서 묻습니다.';
   }
@@ -620,7 +733,7 @@ window.PW = window.PW || {};
 
     if (!o) {
       els.moreAsksBtn.hidden = true;
-      els.step4Sub.textContent = 'STEP 03에서 결과물을 먼저 골라 주세요.';
+      els.condSub.textContent = '앞 카드에서 결과물을 먼저 골라 주세요.';
       return;
     }
     var required = o.asks.filter(function (a) { return a.required; });
@@ -645,7 +758,7 @@ window.PW = window.PW || {};
       els.moreAsksBtn.hidden = true;
     }
     var tail = def ? ' 「' + def.name + '」 전용 조건 ' + tplAsks.length + '개가 더 있습니다.' : '';
-    els.step4Sub.textContent = '「' + o.name + '」에 꼭 필요한 조건만 묻습니다.' + tail;
+    els.condSub.textContent = '「' + o.name + '」에 꼭 필요한 조건만 묻습니다.' + tail;
   }
 
   function syncAsks() {
@@ -741,7 +854,8 @@ window.PW = window.PW || {};
   function stateSig() {
     return state.cat + '|' + state.job + '|' + state.task + '|' + state.out + '|'
       + JSON.stringify(state.out ? answersFor(state.out) : {}) + '|' + state.memo + '|'
-      + JSON.stringify(state.guards) + '|' + (state.orgType || '') + '|' + state.orgName;
+      + JSON.stringify(state.guards) + '|' + (state.orgType || '') + '|' + state.orgName
+      + '|' + (state.keyword || '');
   }
 
   function currentTips() {
@@ -816,7 +930,7 @@ window.PW = window.PW || {};
       state.answers = state.answersByOut[outId];
     }
     state.moreOpen = false;
-    state.step = 4;
+    state.step = 6;
     renderedJob = '__search__';
     renderedTask = '__search__';
     renderedOut = '__search__';
@@ -824,9 +938,8 @@ window.PW = window.PW || {};
     render();
     recordRecent();
     els.searchResults.hidden = true;
-    var sec = $('wstep4');
-    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    PW.editor.toast('「' + taskNameOf(task) + '」 업무로 이동했어요.');
+    showStep(6);
+    PW.editor.toast('「' + taskNameOf(task) + '」 업무로 이동했어요. 조건만 채우면 완성입니다.');
   }
 
   /* ---------------- URL 프리셋 ---------------- */
@@ -854,6 +967,7 @@ window.PW = window.PW || {};
       if (!v) return;
       if (k === 'opt') { preset.opt = v.split('|').filter(function (x) { return !!x; }); has = true; }
       else if (k === 'cat' || k === 'job' || k === 'task' || k === 'out' || k === 'tpl') { preset[k] = v; has = true; }
+      else if (k === 'kw' || k === 'keyword') { preset.keyword = v.slice(0, 120); has = true; }
     });
     return has ? preset : null;
   }
@@ -913,12 +1027,13 @@ window.PW = window.PW || {};
         applied = true;
       }
     }
+    if (p.keyword) { state.keyword = p.keyword; syncKeyword(); applied = true; }
     if (state.out && p.opt && p.opt.length) applyOpt(p.opt);
     if (!isLive()) {
       state.job = null; state.task = null; state.out = null; state.answers = {};
       return applied;
     }
-    state.step = state.out ? 4 : (state.task ? 3 : (state.job ? 2 : 1));
+    state.step = state.out ? 6 : (state.task ? 3 : (state.job ? 2 : 1));
     renderedJob = '__preset__';
     renderedTask = '__preset__';
     renderedOut = '__preset__';
@@ -943,6 +1058,7 @@ window.PW = window.PW || {};
     if (state.out) parts.push('out=' + enc(state.out));
     var a = state.out ? answersFor(state.out) : {};
     var vals = Object.keys(a).map(function (k) { return a[k]; }).filter(function (v) { return !!v; });
+    if (state.keyword) parts.push('kw=' + enc(state.keyword));
     if (state.tplId) parts.push('tpl=' + enc(state.tplId));
     if (vals.length) parts.push('opt=' + enc(vals.join('|')));
     return parts.length ? '?' + parts.join('&') : '';
@@ -1014,7 +1130,7 @@ window.PW = window.PW || {};
   function fullSelection() {
     return {
       cat: state.cat, job: state.job, task: state.task, out: state.out, tplId: state.tplId,
-      orgType: state.orgType, orgName: state.orgName,
+      orgType: state.orgType, orgName: state.orgName, keyword: state.keyword,
       answers: state.out ? answersFor(state.out) : {},
       memo: state.memo, guards: state.guards
     };
@@ -1045,7 +1161,7 @@ window.PW = window.PW || {};
     if (!isLive() || !state.out) return;
     PW.store.pushRecent({
       cat: state.cat, job: state.job, task: state.task, out: state.out,
-      orgType: state.orgType, orgName: state.orgName,
+      orgType: state.orgType, orgName: state.orgName, keyword: state.keyword,
       answers: answersFor(state.out)
     });
     renderShelf();
@@ -1101,6 +1217,7 @@ window.PW = window.PW || {};
     if (selCat && selCat.status === 'live') state.cat = sel.cat;
     if (sel.orgType !== undefined) state.orgType = sel.orgType || null;
     if (typeof sel.orgName === 'string') state.orgName = sel.orgName;
+    if (typeof sel.keyword === 'string') { state.keyword = sel.keyword.slice(0, 120); syncKeyword(); }
     var jid = resolveJobId(sel.job);
     if (jid) state.job = jid;
     var tid = resolveTaskId(sel.task);
@@ -1128,7 +1245,7 @@ window.PW = window.PW || {};
       state.guards = {};
       D.guards.forEach(function (g) { if (sel.guards[g.id]) state.guards[g.id] = true; });
     }
-    state.step = state.out ? 4 : (state.task ? 3 : (state.job ? 2 : 1));
+    state.step = state.out ? 6 : (state.task ? 3 : (state.job ? 2 : 1));
     renderedJob = '__restore__';
     renderedTask = '__restore__';
     renderedOut = '__restore__';
@@ -1175,20 +1292,18 @@ window.PW = window.PW || {};
     syncCatNav();
     els.wizardCard.hidden = false;
 
-    /* 한 번에 한 단계만 보여 준다 — 앞 단계는 접어 두어 좁은 왼쪽 칸에 세로로 쌓이지 않게 한다.
-       선택이 바뀌어 현재 단계가 더는 유효하지 않으면 가까운 유효 단계로 되돌린다. */
-    if (state.step > 1 && !state.job) state.step = 1;
-    if (state.step > 2 && !state.task) state.step = 2;
-    if (state.step > 3 && !state.out) state.step = 3;
+    /* 한 번에 한 카드만 보여 준다 — 선택이 바뀌어 지금 카드가 더는 유효하지 않으면
+       가까운 유효 카드로 되돌린다. */
+    if (state.step >= 5 && !state.out) state.step = 4;
+    if (state.step === 4 && !state.task) state.step = 3;
+    if (state.step === 3 && !state.job) state.step = 2;
     syncRail();
-    els.wstep1.hidden = state.step !== 1;
-    els.wstep2.hidden = state.step !== 2;
-    els.wstep3.hidden = state.step !== 3;
-    els.wstep4.hidden = state.step !== 4;
+    syncCards();
     syncStepNav();
 
     syncJobs();
     syncOrgTypes();
+    syncKeyword();
 
     if (renderedJob !== state.job) {
       buildTasks();
@@ -1326,6 +1441,7 @@ window.PW = window.PW || {};
     state.tplId = null;
     state.orgType = null;
     state.orgName = '';
+    state.keyword = '';
     state.answersByOut = {};
     state.answers = {};
     state.memo = '';
@@ -1341,6 +1457,7 @@ window.PW = window.PW || {};
     els.memo.value = '';
     els.memoCount.textContent = '0자';
     if (els.orgName) els.orgName.value = '';
+    if (els.keywordInput) els.keywordInput.value = '';
     autoGrow();
     if (PW.editor.isEditing()) PW.editor.setEditing(false);
     renderedJob = '__init__';
@@ -1398,6 +1515,30 @@ window.PW = window.PW || {};
       els.orgName.addEventListener('input', function () {
         state.orgName = String(els.orgName.value || '').slice(0, 40);
         scheduleRender();
+      });
+    }
+
+    if (els.keywordInput) {
+      /* 타이핑 중에는 입력한 그대로 두고(띄어쓰기가 지워지지 않게),
+         입력을 마치면 앞뒤 공백과 겹친 공백을 한 번에 정리한다. */
+      els.keywordInput.addEventListener('input', function () {
+        state.keyword = String(els.keywordInput.value || '').slice(0, 120);
+        scheduleRender();
+      });
+      els.keywordInput.addEventListener('change', function () {
+        setKeyword(els.keywordInput.value, false);
+      });
+      els.keywordInput.addEventListener('blur', function () {
+        if (String(els.keywordInput.value || '') !== state.keyword) setKeyword(els.keywordInput.value, false);
+      });
+    }
+
+    if (els.kwExamples) {
+      els.kwExamples.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-kw]');
+        if (!btn) return;
+        var kw = btn.getAttribute('data-kw') || '';
+        setKeyword(state.keyword === kw ? '' : kw, true);
       });
     }
 
@@ -1553,7 +1694,7 @@ window.PW = window.PW || {};
     return {
       cat: sel.cat || D.liveCategoryId, job: jobId, task: taskId, out: out,
       tplId: (sel.tplId && (D.templatesById || {})[sel.tplId]) ? sel.tplId : null,
-      orgType: sel.orgType || null, orgName: sel.orgName || '',
+      orgType: sel.orgType || null, orgName: sel.orgName || '', keyword: sel.keyword || '',
       answers: answers, memo: sel.memo, guards: sel.guards
     };
   }
@@ -1574,7 +1715,8 @@ window.PW = window.PW || {};
     var favs = [];
     PW.store.favorites().forEach(function (f) {
       var m = f.sel ? migrateSelection(f.sel) : null;
-      if (m) f.sel = { cat: m.cat, job: m.job, task: m.task, out: m.out, tplId: m.tplId, answers: m.answers };
+      if (m) f.sel = { cat: m.cat, job: m.job, task: m.task, out: m.out, tplId: m.tplId,
+        orgType: m.orgType, orgName: m.orgName, keyword: m.keyword, answers: m.answers };
       favs.push(f);
     });
     PW.store.replaceFavorites(favs);
@@ -1609,6 +1751,7 @@ window.PW = window.PW || {};
     buildRail();
     buildJobs();
     buildOrgTypes();
+    buildKwExamples();
     buildGuards();
     buildTasks();
     buildOutputs();
@@ -1643,6 +1786,7 @@ window.PW = window.PW || {};
     hasSubject: hasSubject,
     applyTemplate: applyTemplate,
     selectTemplate: selectTemplate,
+    setKeyword: setKeyword,
     applySearchHit: applySearchHit,
     renderSearch: renderSearch,
     migrateStore: migrateStore,
@@ -1664,7 +1808,7 @@ window.PW = window.PW || {};
     selected: function () {
       return {
         cat: state.cat, job: state.job, task: state.task, out: state.out, tplId: state.tplId,
-        orgType: state.orgType, orgName: state.orgName,
+        orgType: state.orgType, orgName: state.orgName, keyword: state.keyword,
         answers: state.out ? answersFor(state.out) : {},
         memo: state.memo, guards: state.guards
       };

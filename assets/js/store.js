@@ -1,6 +1,6 @@
 /* =========================================================
    Prompt Wizard — 즐겨찾기 · 최근 프롬프트 (localStorage 전용)
-   · 최근 기록: 선택값만 저장한다(프롬프트 본문·메모는 저장하지 않는다).
+   · 최근 기록: 선택값만 저장한다(프롬프트 본문·메모는 저장하지 않는다). v4.4부터 핵심 키워드도 함께.
    · 즐겨찾기: 사용자가 「저장」을 누른 경우에만 제목·본문까지 저장하고, 항목별 삭제를 둔다.
    · 저장소가 막힌 환경(사생활 보호 모드·쿼터 초과)에서는 오류 없이 조용히 비운다.
    · 서버로 보내는 값은 하나도 없다.
@@ -66,7 +66,7 @@ window.PW = window.PW || {};
   function sigOf(sel) {
     sel = sel || {};
     return [sel.cat || '', sel.job || '', sel.task || '', sel.out || '', JSON.stringify(sel.answers || {}),
-      sel.orgType || '', sel.orgName || ''].join('|');
+      sel.orgType || '', sel.orgName || '', sel.keyword || ''].join('|');
   }
 
   /* ---- 최근 ---- */
@@ -89,6 +89,7 @@ window.PW = window.PW || {};
       out: sel.out || '',
       orgType: sel.orgType || '',
       orgName: sel.orgName || '',
+      keyword: sel.keyword || '',
       answers: sel.answers || {},
       ts: Date.now()
     });
