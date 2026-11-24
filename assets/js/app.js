@@ -307,8 +307,10 @@ window.PW = window.PW || {};
       var btn = h('button', 'rail-step');
       btn.type = 'button';
       btn.setAttribute('data-step', String(s.n));
+      btn.setAttribute('title', s.n + '. ' + s.label);
+      btn.setAttribute('aria-label', s.n + '번째 카드 — ' + s.label);
       btn.appendChild(h('span', 'rail-num', '0' + s.n));
-      btn.appendChild(h('span', 'rail-label', s.label));
+      btn.appendChild(h('span', 'rail-label', s.short));
       btn.appendChild(h('span', 'rail-check', '✓'));
       els.stepRail.appendChild(btn);
     });
@@ -968,6 +970,8 @@ window.PW = window.PW || {};
       if (k === 'opt') { preset.opt = v.split('|').filter(function (x) { return !!x; }); has = true; }
       else if (k === 'cat' || k === 'job' || k === 'task' || k === 'out' || k === 'tpl') { preset[k] = v; has = true; }
       else if (k === 'kw' || k === 'keyword') { preset.keyword = v.slice(0, 120); has = true; }
+      /* ?card=5 — 처음 열릴 카드를 지정한다(공유·미리보기용). 잠긴 카드는 무시한다. */
+      else if (k === 'card' || k === 'step') { preset.card = Number(v); has = true; }
     });
     return has ? preset : null;
   }
@@ -1034,6 +1038,8 @@ window.PW = window.PW || {};
       return applied;
     }
     state.step = state.out ? 6 : (state.task ? 3 : (state.job ? 2 : 1));
+    var wantCard = Number(p.card);
+    if (wantCard >= 1 && wantCard <= CARD_MAX && stepUnlocked(wantCard)) state.step = wantCard;
     renderedJob = '__preset__';
     renderedTask = '__preset__';
     renderedOut = '__preset__';

@@ -492,10 +492,17 @@ a{color:inherit;text-decoration:none}
   }
   .preview-col{
     order:2;position:static;top:auto;flex:0 0 auto;
+    display:flex;flex-direction:column;
     height:auto;min-height:0;max-height:none;
     margin:0;border-radius:16px;border-color:#dde3ef;
     box-shadow:0 14px 30px -28px rgba(17,24,39,.55);
   }
+  /* 복사·챗GPT 버튼을 프롬프트 위로 — 긴 글을 다 내려가지 않아도 바로 복사한다 */
+  .preview-head{order:1}
+  .actions{order:2;border-top:0;border-bottom:1px solid var(--line)}
+  .prompt-body{order:3}
+  .quality{order:4}
+  .tips{order:5}
   .shelf{order:3;flex:0 0 auto}
   .quality{display:block}
   .ad-slot--end{display:none}
@@ -800,6 +807,13 @@ body.modal-open{overflow:hidden}
   .rail-step{padding:6px 7px;gap:4px;font-size:10.5px}
   .job-grid{grid-template-columns:1fr 1fr}
   .out-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:1024px){
+  /* 질문 라벨과 힌트를 위아래로 — 좁은 화면에서 라벨이 한 글자씩 쪼개지지 않게 */
+  .q-label{flex-wrap:wrap;row-gap:3px}
+  .q-label-tx{flex:1 1 100%}
+  .q-hint{flex:1 1 100%;text-align:left}
+  .frame-wrap .q-label,.guard-block .q-label,.memo-top{gap:4px}
 }
 @media (max-width:560px){
   .job-grid,.out-grid{grid-template-columns:1fr}
