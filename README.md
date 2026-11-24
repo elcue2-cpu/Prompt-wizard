@@ -37,6 +37,7 @@ sitemap.xml · robots.txt         검색엔진용 (모두 대문자 Pages 주소
 .nojekyll                        GitHub Pages 정적 서빙
 landing/*.html                   SEO 랜딩 6종 (생성물)
 tools/build_landing.py           랜딩·sitemap 생성기 (배포 대상 아님)
+tools/mobile-preview.html        모바일(390×844) 미리보기 — 개발용, noindex
 assets/css/app.css               위자드 스타일
 assets/css/landing.css           랜딩 스타일
 assets/img/og-default.png        공유 카드 이미지

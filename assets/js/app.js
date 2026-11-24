@@ -1588,6 +1588,7 @@ window.PW = window.PW || {};
       hasSubject: hasSubject,
       sig: stateSig,
       memoEmpty: function () { return E.memoLines(state).length === 0; },
+      hintReady: function () { return !!state.out; },
       tips: currentTips,
       tipsSub: function () {
         return state.out ? '그대로 복사해 답변 아래에 이어 붙이면 됩니다.' : '결과물을 고르면 그 결과물에 맞는 팁으로 바뀝니다.';

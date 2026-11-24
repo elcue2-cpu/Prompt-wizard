@@ -19,6 +19,7 @@ window.PW = window.PW || {};
     hasSubject: function () { return false; },
     sig: function () { return ''; },
     memoEmpty: function () { return true; },
+    hintReady: function () { return true; },
     tips: function () { return []; },
     tipsSub: function () { return ''; },
     instantKey: 'context',
@@ -363,7 +364,9 @@ window.PW = window.PW || {};
 
   function syncHint() {
     if (!els.pwHint) return;
-    els.pwHint.hidden = !(hooks.hasSubject() && !editing && hooks.memoEmpty());
+    /* 메모 안내는 결과물까지 고른 뒤(STEP 03 이후)에만 띄운다 —
+       1단계에서 역할 문단만 써질 때 "STEP 04의 메모를…"이 먼저 나오지 않게. */
+    els.pwHint.hidden = !(hooks.hasSubject() && !editing && hooks.hintReady() && hooks.memoEmpty());
   }
 
   /* =======================================================

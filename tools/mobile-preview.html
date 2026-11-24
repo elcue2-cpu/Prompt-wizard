@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Prompt Wizard · 모바일 미리보기 (개발용)</title>
+<style>
+  body{margin:0;padding:24px;background:#e9edf4;font-family:'Noto Sans KR',system-ui,sans-serif;color:#191f28}
+  h1{margin:0 0 4px;font-size:16px}
+  p{margin:0 0 18px;font-size:12.5px;color:#4e5968;line-height:1.6}
+  .row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+  .item{display:flex;flex-direction:column;gap:8px}
+  .cap{font-size:12px;font-weight:700;color:#3b4bd6}
+  .phone{width:390px;height:844px;border-radius:26px;border:10px solid #1b2430;background:#fff;overflow:hidden;box-shadow:0 20px 50px -30px rgba(15,23,42,.6)}
+  .phone iframe{display:block;width:370px;height:824px;border:0;background:#f4f5f7}
+</style>
+</head>
+<body>
+  <h1>모바일 미리보기 (개발용)</h1>
+  <p>아이폰 크기(390×844)에서 실제 위자드를 iframe으로 띄웁니다. 배포 화면과 같은 코드이며, 검색엔진에는 노출되지 않습니다(<code>noindex</code>).</p>
+  <div class="row">
+    <div class="item">
+      <span class="cap">STEP 01 — 분야·소속 선택</span>
+      <div class="phone"><iframe src="../index.html" title="Prompt Wizard 모바일 미리보기 (처음)"></iframe></div>
+    </div>
+    <div class="item">
+      <span class="cap">STEP 04 — 조건을 채운 상태</span>
+      <div class="phone"><iframe src="../index.html?cat=public&amp;job=fac&amp;task=inspection&amp;out=report&amp;opt=doc%3Ainternal%7Cgoal%3Astatus%7Ctone%3Abrief" title="Prompt Wizard 모바일 미리보기 (조건 채움)"></iframe></div>
+    </div>
+  </div>
+</body>
+</html>
