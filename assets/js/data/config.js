@@ -6,8 +6,16 @@ window.PW = window.PW || {};
 (function (PW) {
   'use strict';
   PW.config = {
-    version: 'v4.1',
+    version: 'v4.2',
     urlSync: true,
+    /* STEP 01 「소속 기관 성격」 칩 — 고르지 않아도 된다(선택).
+       value는 저장값·URL에 쓰지 않고, 엔진이 label을 역할 문장에 넣는다. */
+    orgTypes: [
+      { value: 'public-corp', label: '공단·공사' },
+      { value: 'gov', label: '중앙부처·지자체' },
+      { value: 'inst', label: '출연연·교육기관' },
+      { value: 'other', label: '기타 공공기관' }
+    ],
     ads: {
       enabled: false,
       client: '',

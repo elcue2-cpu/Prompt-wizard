@@ -6,6 +6,8 @@ set -euo pipefail
 REPO="${1:-elcue2-cpu/prompt-wizard}"
 URL="https://elcue2-cpu.github.io/Prompt-wizard/"
 VERIFY="${PW_VERIFY:-../../work/pw_verify_v4.sh}"
+TAG="${PW_TAG:-v4.2}"
+TAG_MSG="${PW_TAG_MSG:-Prompt Wizard v4.2 — 순차 위저드(한 단계씩)·소속 기관 성격/기관명·느린 타이핑}"
 cd "$(dirname "$0")"
 
 echo "== 0. v4 검증 게이트 =="
@@ -26,13 +28,13 @@ git -c user.name=elcue2-cpu -c user.email=elcue2-cpu@users.noreply.github.com \
     commit -m "${PW_COMMIT_MSG:-프롬프트 위자드 v4 배포}" || echo "(커밋할 변경 없음)"
 git push origin main
 
-echo "== 3. v4.1 태그 =="
-if git rev-parse -q --verify refs/tags/v4.1 >/dev/null; then
-  echo "v4.1 태그가 이미 있습니다."
+echo "== 3. ${TAG} 태그 =="
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "$TAG 태그가 이미 있습니다."
 else
   git -c user.name=elcue2-cpu -c user.email=elcue2-cpu@users.noreply.github.com \
-      tag -a v4.1 -m "Prompt Wizard v4.1 — 8대 분야 62업무·216 템플릿 카드·표·서식·자연어 업무 검색"
-  git push origin v4.1
+      tag -a "$TAG" -m "$TAG_MSG"
+  git push origin "$TAG"
 fi
 
 echo "== 4. Pages 응답 확인 (최대 120초) =="
@@ -47,7 +49,7 @@ for i in $(seq 1 24); do
 done
 
 echo "== 5. 새 파일 반영 확인 =="
-for path in sitemap.xml robots.txt privacy.html landing/public-report.html assets/js/quality.js assets/js/search.js assets/js/data/templates-office.js assets/js/data/taxonomy-alias.js; do
+for path in sitemap.xml robots.txt privacy.html landing/public-report.html assets/js/quality.js assets/js/search.js assets/js/editor.js assets/js/engine.js assets/js/data/config.js assets/js/data/templates-office.js assets/js/data/taxonomy-alias.js; do
   code=$(curl -sS -o /dev/null -m 20 -w '%{http_code}' "${URL}${path}" || true)
   echo "  ${path} -> ${code}"
   [ "$code" = "200" ] || echo "  (아직 반영 전일 수 있습니다 — Pages 빌드를 확인하세요)"

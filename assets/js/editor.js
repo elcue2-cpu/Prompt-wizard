@@ -8,9 +8,12 @@ window.PW = window.PW || {};
 (function (PW) {
   'use strict';
 
-  var TICK = 15;
-  var FRAMES = 32;
-  var MAX_CHUNK = 40;
+  /* 타이핑 리듬 (v4.2) — 15ms/32프레임은 너무 즉시 바뀌어 보였다.
+     한 번의 변경이 약 1.5초에 걸쳐 천천히 흘러가도록 간격을 늘리고 프레임을 나눈다.
+     최대 프레임은 FRAMES(55×28ms≈1.54초)이고, 짧은 문단은 글자 수만큼만 진행된다. */
+  var TICK = 28;
+  var FRAMES = 55;
+  var MAX_CHUNK = 24;
 
   var hooks = {
     hasSubject: function () { return false; },
@@ -218,7 +221,7 @@ window.PW = window.PW || {};
       if (streamActive || !els.pwEditor) return;
       var marks = els.pwEditor.querySelectorAll('.pw-mark');
       for (var i = 0; i < marks.length; i++) marks[i].classList.add('is-faded');
-    }, 900);
+    }, 1100);
   }
 
   function announce() {
@@ -711,6 +714,8 @@ window.PW = window.PW || {};
     copyText: copyText,
     toast: toast,
     syncTopbarHeight: syncTopbarHeight,
-    paintStatus: paintStatus
+    paintStatus: paintStatus,
+    /* 검증용 — 타이핑 리듬 상수(화면에는 영향 없음) */
+    timing: function () { return { tick: TICK, frames: FRAMES, maxChunk: MAX_CHUNK }; }
   };
 })(window.PW);

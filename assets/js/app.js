@@ -17,6 +17,8 @@ window.PW = window.PW || {};
     task: null,
     out: null,
     tplId: null,
+    orgType: null,
+    orgName: '',
     answersByOut: {},
     answers: {},
     memo: '',
@@ -52,10 +54,17 @@ window.PW = window.PW || {};
     catNav: $('catNav'),
     brandSub: $('brandSub'),
     stepRail: $('stepRail'),
+    quickWrap: $('quickWrap'),
     wstep1: $('wstep1'),
     wstep2: $('wstep2'),
     wstep3: $('wstep3'),
     wstep4: $('wstep4'),
+    stepNav: $('stepNav'),
+    stepPrev: $('stepPrev'),
+    stepNext: $('stepNext'),
+    stepNavHint: $('stepNavHint'),
+    orgTypes: $('orgTypes'),
+    orgName: $('orgName'),
     jobGrid: $('jobGrid'),
     taskChips: $('taskChips'),
     outGrid: $('outGrid'),
@@ -319,6 +328,52 @@ window.PW = window.PW || {};
     });
   }
 
+  /* ---------------- 단계 이동 (한 번에 한 단계만 표시) ----------------
+     선택은 그대로 두고 보이는 단계만 바꾸므로, 앞 단계로 돌아가 고쳐도
+     아래 단계의 선택값이 살아 있다. */
+
+  function showStep(n) {
+    var sec = $('wstep' + n);
+    if (!sec || !sec.scrollIntoView) return;
+    try { sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    catch (e) { try { sec.scrollIntoView(); } catch (e2) { /* 스크롤을 막는 환경은 무시 */ } }
+  }
+
+  function goStep(n) {
+    n = Number(n);
+    if (!(n >= 1 && n <= 4)) return false;
+    if (n !== state.step && !stepUnlocked(n)) {
+      PW.editor.toast('앞 단계를 먼저 골라 주세요.');
+      return false;
+    }
+    if (state.step === n) { showStep(n); return false; }
+    state.step = n;
+    render();
+    showStep(n);
+    return true;
+  }
+
+  function syncStepNav() {
+    var n = state.step;
+    var nextOpen = n < 4 && stepUnlocked(n + 1);
+    if (els.stepNav) els.stepNav.setAttribute('data-step', String(n));
+    if (els.stepPrev) {
+      els.stepPrev.disabled = n <= 1;
+      els.stepPrev.textContent = '← 이전 단계';
+    }
+    if (els.stepNext) {
+      els.stepNext.disabled = !nextOpen;
+      els.stepNext.textContent = n >= 4 ? '마지막 단계' : '다음 단계 →';
+    }
+    if (!els.stepNavHint) return;
+    var msg;
+    if (n === 1) msg = state.job ? '02 세부 업무로 넘어갈 수 있어요.' : '분야를 고르면 02 업무가 열립니다.';
+    else if (n === 2) msg = state.task ? '03 결과물로 넘어갈 수 있어요.' : '세부 업무를 고르면 03 결과물이 열립니다.';
+    else if (n === 3) msg = state.out ? '04 세부 조건으로 넘어갈 수 있어요.' : '결과물을 고르면 04 조건이 열립니다.';
+    else msg = '조건을 채우면 오른쪽 프롬프트가 완성됩니다.';
+    els.stepNavHint.textContent = 'STEP 0' + n + ' — ' + msg;
+  }
+
   /* ---------------- STEP 01 직무 ---------------- */
 
   function buildJobs() {
@@ -346,6 +401,42 @@ window.PW = window.PW || {};
       n.classList.toggle('is-on', on);
       n.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+  }
+
+  /* ---------------- STEP 01 소속 기관 (선택) ---------------- */
+
+  function buildOrgTypes() {
+    if (!els.orgTypes) return;
+    els.orgTypes.innerHTML = '';
+    ((PW.config && PW.config.orgTypes) || []).forEach(function (o) {
+      var b = h('button', 'chip org-chip');
+      b.type = 'button';
+      b.setAttribute('data-org-type', o.value);
+      b.setAttribute('aria-pressed', 'false');
+      b.appendChild(h('span', 'chip-tick', '✓'));
+      b.appendChild(h('span', null, o.label));
+      els.orgTypes.appendChild(b);
+    });
+  }
+
+  function syncOrgTypes() {
+    if (els.orgTypes) {
+      var nodes = els.orgTypes.querySelectorAll('[data-org-type]');
+      Array.prototype.forEach.call(nodes, function (n) {
+        var on = n.getAttribute('data-org-type') === state.orgType;
+        n.classList.toggle('is-on', on);
+        n.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+    if (els.orgName && els.orgName.value !== state.orgName) els.orgName.value = state.orgName;
+  }
+
+  function toggleOrgType(value) {
+    state.orgType = (state.orgType === value) ? null : value;
+    render();
+    els.liveStatus.textContent = state.orgType
+      ? '소속 기관 성격을 역할 문장에 반영합니다.'
+      : '소속 기관 성격을 비웠습니다. 기본 문장으로 돌아갑니다.';
   }
 
   /* ---------------- STEP 02 세부 업무 ---------------- */
@@ -650,7 +741,7 @@ window.PW = window.PW || {};
   function stateSig() {
     return state.cat + '|' + state.job + '|' + state.task + '|' + state.out + '|'
       + JSON.stringify(state.out ? answersFor(state.out) : {}) + '|' + state.memo + '|'
-      + JSON.stringify(state.guards);
+      + JSON.stringify(state.guards) + '|' + (state.orgType || '') + '|' + state.orgName;
   }
 
   function currentTips() {
@@ -973,6 +1064,7 @@ window.PW = window.PW || {};
   function fullSelection() {
     return {
       cat: state.cat, job: state.job, task: state.task, out: state.out, tplId: state.tplId,
+      orgType: state.orgType, orgName: state.orgName,
       answers: state.out ? answersFor(state.out) : {},
       memo: state.memo, guards: state.guards
     };
@@ -1003,6 +1095,7 @@ window.PW = window.PW || {};
     if (!isLive() || !state.out) return;
     PW.store.pushRecent({
       cat: state.cat, job: state.job, task: state.task, out: state.out,
+      orgType: state.orgType, orgName: state.orgName,
       answers: answersFor(state.out)
     });
     renderShelf();
@@ -1056,6 +1149,8 @@ window.PW = window.PW || {};
     if (!sel) return false;
     var selCat = sel.cat ? E.byId(D.categories, sel.cat) : null;
     if (selCat && selCat.status === 'live') state.cat = sel.cat;
+    if (sel.orgType !== undefined) state.orgType = sel.orgType || null;
+    if (typeof sel.orgName === 'string') state.orgName = sel.orgName;
     var jid = resolveJobId(sel.job);
     if (jid) state.job = jid;
     var tid = resolveTaskId(sel.task);
@@ -1130,13 +1225,22 @@ window.PW = window.PW || {};
     syncCatNav();
     els.wizardCard.hidden = false;
 
+    /* 한 번에 한 단계만 보여 준다 — 앞 단계는 접어 두어 좁은 왼쪽 칸에 세로로 쌓이지 않게 한다.
+       선택이 바뀌어 현재 단계가 더는 유효하지 않으면 가까운 유효 단계로 되돌린다. */
+    if (state.step > 1 && !state.job) state.step = 1;
+    if (state.step > 2 && !state.task) state.step = 2;
+    if (state.step > 3 && !state.out) state.step = 3;
     syncRail();
-    els.wstep1.hidden = false;
-    els.wstep2.hidden = !state.job;
-    els.wstep3.hidden = !(state.task || state.out);
-    els.wstep4.hidden = !state.out;
+    els.wstep1.hidden = state.step !== 1;
+    els.wstep2.hidden = state.step !== 2;
+    els.wstep3.hidden = state.step !== 3;
+    els.wstep4.hidden = state.step !== 4;
+    /* 빠른 시작은 첫 단계에서만 보여 준다(2~4단계를 가리지 않게) */
+    if (els.quickWrap) els.quickWrap.hidden = state.step !== 1;
+    syncStepNav();
 
     syncJobs();
+    syncOrgTypes();
 
     if (renderedJob !== state.job) {
       buildTasks();
@@ -1221,8 +1325,9 @@ window.PW = window.PW || {};
       jobTasks(job).forEach(function (t) { if (t.id === remembered) ok = true; });
       state.task = ok ? remembered : null;
     }
-    state.step = Math.max(state.step, 2);
+    state.step = 2;   /* 분야를 골랐으니 바로 02 업무로 넘어간다 */
     render();
+    showStep(2);
     els.liveStatus.textContent = job.name + ' 직무가 선택되었습니다.';
   }
 
@@ -1238,8 +1343,9 @@ window.PW = window.PW || {};
     state.task = id;
     state.tplId = null;
     state.lastTaskByJob[state.job] = id;
-    state.step = Math.max(state.step, 3);
+    state.step = 3;   /* 업무를 골랐으니 바로 03 결과물로 넘어간다 */
     render();
+    showStep(3);
   }
 
   function selectOut(id) {
@@ -1271,6 +1377,8 @@ window.PW = window.PW || {};
     state.task = null;
     state.out = null;
     state.tplId = null;
+    state.orgType = null;
+    state.orgName = '';
     state.answersByOut = {};
     state.answers = {};
     state.memo = '';
@@ -1285,6 +1393,7 @@ window.PW = window.PW || {};
 
     els.memo.value = '';
     els.memoCount.textContent = '0자';
+    if (els.orgName) els.orgName.value = '';
     autoGrow();
     if (PW.editor.isEditing()) PW.editor.setEditing(false);
     renderedJob = '__init__';
@@ -1320,16 +1429,30 @@ window.PW = window.PW || {};
     els.stepRail.addEventListener('click', function (ev) {
       var btn = ev.target.closest('[data-step]');
       if (!btn) return;
-      var n = Number(btn.getAttribute('data-step'));
-      if (!stepUnlocked(n)) {
-        PW.editor.toast('앞 단계를 먼저 골라 주세요.');
-        return;
-      }
-      state.step = n;
-      render();
-      var sec = $('wstep' + n);
-      if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      /* 잠긴 단계는 goStep이 토스트로 안내한다 */
+      goStep(Number(btn.getAttribute('data-step')));
     });
+
+    if (els.stepPrev) {
+      els.stepPrev.addEventListener('click', function () { goStep(state.step - 1); });
+    }
+    if (els.stepNext) {
+      els.stepNext.addEventListener('click', function () { goStep(state.step + 1); });
+    }
+
+    if (els.orgTypes) {
+      els.orgTypes.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-org-type]');
+        if (btn) toggleOrgType(btn.getAttribute('data-org-type'));
+      });
+    }
+
+    if (els.orgName) {
+      els.orgName.addEventListener('input', function () {
+        state.orgName = String(els.orgName.value || '').slice(0, 40);
+        scheduleRender();
+      });
+    }
 
     els.jobGrid.addEventListener('click', function (ev) {
       var btn = ev.target.closest('[data-job]');
@@ -1490,6 +1613,7 @@ window.PW = window.PW || {};
     return {
       cat: sel.cat || D.liveCategoryId, job: jobId, task: taskId, out: out,
       tplId: (sel.tplId && (D.templatesById || {})[sel.tplId]) ? sel.tplId : null,
+      orgType: sel.orgType || null, orgName: sel.orgName || '',
       answers: answers, memo: sel.memo, guards: sel.guards
     };
   }
@@ -1543,6 +1667,7 @@ window.PW = window.PW || {};
     if (els.searchClear) els.searchClear.hidden = true;
     buildRail();
     buildJobs();
+    buildOrgTypes();
     buildGuards();
     buildTasks();
     buildOutputs();
@@ -1570,6 +1695,7 @@ window.PW = window.PW || {};
   PW.app = {
     state: state,
     render: render,
+    goStep: goStep,
     computeStats: computeStats,
     stateSig: stateSig,
     parsePreset: parsePreset,
@@ -1598,6 +1724,7 @@ window.PW = window.PW || {};
     selected: function () {
       return {
         cat: state.cat, job: state.job, task: state.task, out: state.out, tplId: state.tplId,
+        orgType: state.orgType, orgName: state.orgName,
         answers: state.out ? answersFor(state.out) : {},
         memo: state.memo, guards: state.guards
       };

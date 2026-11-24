@@ -1,6 +1,6 @@
 /* =========================================================
-   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.1)
-   입력: state {cat, job, task, out, tplId, answers, memo, guards}
+   Prompt Wizard — 공통 프롬프트 조립 엔진 (v4.2)
+   입력: state {cat, job, task, out, tplId, answers, memo, guards, orgType, orgName}
    출력: [{key, text}] 문단 배열 — 역할·맥락·요청·프레임·상황·형식·문체·규칙·조건·관점·분량·원칙·검증
    엔진은 특정 도메인을 모른다. 문장 뼈대는 data/outputs-*.js의 template이 갖고,
    분야 전문성은 data/frames-office.js의 frame이, 문서별 특화는 templates-office.js의 정의가 맡는다.
@@ -112,20 +112,47 @@ window.PW = window.PW || {};
     return value;
   }
 
+  /* ---------- 소속 기관 (선택) ----------
+     state.orgType: config.orgTypes의 value / state.orgName: 짧은 기관명.
+     비어 있으면 v3·v4.1 문장 그대로(하위 호환). */
+  function orgLabel(type) {
+    var list = (PW.config && PW.config.orgTypes) || [];
+    for (var i = 0; i < list.length; i++) if (list[i].value === type) return list[i].label;
+    return '';
+  }
+
+  function orgNameOf(st) {
+    return String((st && st.orgName) || '').replace(/\s+/g, ' ').trim();
+  }
+
+  /* '○○공단(공단·공사)' / '공단·공사 소속 기관' / '○○공단' — 없으면 빈 문자열 */
+  function orgPhrase(st) {
+    var name = orgNameOf(st);
+    var label = orgLabel(st && st.orgType);
+    if (name && label) return name + '(' + label + ')';
+    if (name) return name;
+    if (label) return label + ' 소속 기관';
+    return '';
+  }
+
   /* ---------- 문단 빌더 ---------- */
 
   /* ① 역할 — 직무를 고르면 그 직무 실무자로 역할을 좁힌다 */
-  function roleSegment(tpl, job) {
+  function roleSegment(tpl, job, st) {
+    var org = orgPhrase(st);
+    var who = org ? org + '의' : tpl.org;
     var lead = job
-      ? '당신은 ' + tpl.org + ' ' + job.domain + ' 실무를 15년 넘게 맡아 온 ' + tpl.expert + '입니다.'
+      ? '당신은 ' + who + ' ' + job.domain + ' 실무를 15년 넘게 맡아 온 ' + tpl.expert + '입니다.'
       : '당신은 ' + tpl.backdrop + '입니다.';
     return lead + ' ' + tpl.principle;
   }
 
   /* ② 직무·업무 맥락 */
-  function contextSegment(job, task) {
+  function contextSegment(job, task, st) {
     if (!job || !task) return '';
-    return '저는 ' + job.contextPhrase + ' 직무에서 「' + task.label + '」 업무를 담당하고 있습니다.';
+    var org = orgPhrase(st);
+    var where = org ? org + '의 ' + job.contextPhrase : job.contextPhrase;
+    return '저는 ' + where + ' 직무에서 「' + task.label + '」 업무를 담당하고 있습니다.';
   }
 
   /* ③ 요청사항 */
@@ -267,8 +294,8 @@ window.PW = window.PW || {};
 
     keys.forEach(function (key) {
       var text = '';
-      if (key === 'role') text = roleSegment(tpl, job);
-      else if (key === 'context') text = contextSegment(job, task);
+      if (key === 'role') text = roleSegment(tpl, job, st);
+      else if (key === 'context') text = contextSegment(job, task, st);
       else if (key === 'request') text = requestSegment(tpl, a);
       else if (key === 'frame') text = frameSegment(frame);
       else if (key === 'situation') text = situationSegment(st);
@@ -292,6 +319,8 @@ window.PW = window.PW || {};
     order: ORDER,
     objList: objList,
     memoLines: memoLines,
+    orgLabel: orgLabel,
+    orgPhrase: orgPhrase,
     jobOf: jobOf,
     taskOf: taskOf,
     outputOf: outputOf,

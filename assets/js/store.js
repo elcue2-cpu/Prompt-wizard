@@ -65,7 +65,8 @@ window.PW = window.PW || {};
 
   function sigOf(sel) {
     sel = sel || {};
-    return [sel.cat || '', sel.job || '', sel.task || '', sel.out || '', JSON.stringify(sel.answers || {})].join('|');
+    return [sel.cat || '', sel.job || '', sel.task || '', sel.out || '', JSON.stringify(sel.answers || {}),
+      sel.orgType || '', sel.orgName || ''].join('|');
   }
 
   /* ---- 최근 ---- */
@@ -86,6 +87,8 @@ window.PW = window.PW || {};
       job: sel.job || '',
       task: sel.task || '',
       out: sel.out || '',
+      orgType: sel.orgType || '',
+      orgName: sel.orgName || '',
       answers: sel.answers || {},
       ts: Date.now()
     });
