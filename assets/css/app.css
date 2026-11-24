@@ -468,32 +468,43 @@ a{color:inherit;text-decoration:none}
 .toast.is-on{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:1024px){
-  .topbar-inner{padding:12px 18px}
+  .topbar-inner{padding:10px 14px}
   .brand-sub{display:none}
-  .app{padding:16px 14px 40px}
-  .card{padding:18px 16px;border-radius:18px}
+  .app{padding:10px 12px 14px}
+  .card{padding:16px 14px;border-radius:18px}
 
-  /* ── v4.3 모바일: 위 = 심플한 질의응답 위자드, 아래 = 실시간 프롬프트 ── */
-  .workspace{display:flex;flex-direction:column;gap:14px;align-items:stretch}
-  .col-left{display:contents}
-  .wizard{order:1}
-  .ad-slot--start{order:2;margin:0}
-  .preview-col{
-    order:3;position:static;top:auto;
-    height:auto;max-height:none;min-height:0;
-    margin:2px 0 0;border-radius:18px;border-color:#dde3ef;
-    box-shadow:0 16px 34px -30px rgba(17,24,39,.55);
+  /* ── v4.3 모바일: 화면을 위/아래로 나눈다 ──
+     위 = 심플한 질의응답(위자드, 안에서 스크롤), 아래 = 실시간 프롬프트(항상 보임).
+     하단 고정 바·바텀시트는 없앴고, 두 칸 모두 화면 안에 들어온다. */
+  .workspace{
+    display:flex;flex-direction:column;gap:10px;
+    height:calc(100vh - var(--topbar-h,56px) - 24px);
+    height:calc(100dvh - var(--topbar-h,56px) - 24px);
+    min-height:480px;
   }
-  .shelf{order:4}
+  .col-left{display:contents}
+  .wizard{order:1;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 0}
+  .wstep-nav{
+    position:sticky;bottom:0;z-index:3;margin-top:16px;padding:12px 0 14px;
+    background:linear-gradient(180deg,rgba(255,255,255,.92) 0%,#fff 28%);
+    border-top:1px dashed var(--line);
+  }
+  .preview-col{
+    order:2;position:static;top:auto;flex:0 0 auto;
+    height:46%;min-height:240px;max-height:56vh;
+    margin:0;border-radius:16px;border-color:#dde3ef;
+    box-shadow:0 14px 30px -28px rgba(17,24,39,.55);
+  }
+  .shelf{order:3;flex:0 0 auto}
   .quality{display:block}
   .ad-slot--end{display:none}
-  .preview-head{padding:11px 14px 10px}
-  .ph-top{margin-bottom:9px}
+  .preview-head{padding:10px 13px 9px}
+  .ph-top{margin-bottom:8px}
   .ph-title{font-size:12.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .gauge-num{font-size:18px;min-width:48px}
   .gauge-tag{font-size:10.5px;min-width:76px}
   .gauge-track{height:6px}
-  .prompt-body{padding:10px 12px 12px;max-height:min(62vh,560px)}
+  .prompt-body{flex:1;min-height:0;max-height:none;padding:10px 12px 12px}
   .pw-bar{padding-bottom:7px;margin-bottom:8px}
   .pw-status{font-size:10.5px}
   .pw-meta{display:none}
@@ -501,14 +512,14 @@ a{color:inherit;text-decoration:none}
   .pw-editor{font-size:12px;line-height:1.72}
   .pw-seg{margin-bottom:9px}
   .pw-hint{font-size:10.5px}
-  .pw-textarea{font-size:12px;line-height:1.72;min-height:150px}
-  .preview-col .empty{padding:20px 14px}
-  .preview-col .empty-art{width:56px;height:56px;border-radius:18px;font-size:21px;margin-bottom:11px}
-  .preview-col .empty-title{font-size:13px}
-  .preview-col .empty-desc{font-size:12px;line-height:1.62;max-width:300px}
-  .actions{padding:10px 12px calc(11px + env(safe-area-inset-bottom))}
-  .btn{font-size:12.5px;padding:11px 10px}
-  .toast{bottom:24px}
+  .pw-textarea{font-size:12px;line-height:1.72;min-height:120px}
+  .preview-col .empty{padding:14px}
+  .preview-col .empty-art{width:48px;height:48px;border-radius:16px;font-size:19px;margin-bottom:9px}
+  .preview-col .empty-title{font-size:12.5px;margin-bottom:3px}
+  .preview-col .empty-desc{font-size:11.5px;line-height:1.55;max-width:280px}
+  .actions{padding:9px 11px calc(10px + env(safe-area-inset-bottom))}
+  .btn{font-size:12.5px;padding:10px 9px}
+  .toast{bottom:20px}
 }
 
 @media (max-width:400px){
