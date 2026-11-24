@@ -475,15 +475,15 @@ a{color:inherit;text-decoration:none}
 
   /* ── v4.3 모바일: 화면을 위/아래로 나눈다 ──
      위 = 심플한 질의응답(위자드, 안에서 스크롤), 아래 = 실시간 프롬프트(항상 보임).
-     하단 고정 바·바텀시트는 없앴고, 두 칸 모두 화면 안에 들어온다. */
-  .workspace{
-    display:flex;flex-direction:column;gap:10px;
-    height:calc(100vh - var(--topbar-h,56px) - 24px);
-    height:calc(100dvh - var(--topbar-h,56px) - 24px);
-    min-height:480px;
-  }
+     두 칸을 합치면 첫 화면을 꽉 채우고, 즐겨찾기·최근은 그 아래로 내려간다.
+     하단 고정 바·바텀시트는 없앴다. */
+  .workspace{--pw-prev:44vh;display:flex;flex-direction:column;gap:10px}
   .col-left{display:contents}
-  .wizard{order:1;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 0}
+  .wizard{
+    order:1;flex:0 0 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding:14px 14px 0;
+    height:max(220px,calc(100dvh - var(--topbar-h,56px) - var(--pw-prev) - 34px));
+  }
   .wstep-nav{
     position:sticky;bottom:0;z-index:3;margin-top:16px;padding:12px 0 14px;
     background:linear-gradient(180deg,rgba(255,255,255,.92) 0%,#fff 28%);
@@ -491,7 +491,7 @@ a{color:inherit;text-decoration:none}
   }
   .preview-col{
     order:2;position:static;top:auto;flex:0 0 auto;
-    height:46%;min-height:240px;max-height:56vh;
+    height:var(--pw-prev);min-height:240px;max-height:52vh;
     margin:0;border-radius:16px;border-color:#dde3ef;
     box-shadow:0 14px 30px -28px rgba(17,24,39,.55);
   }
