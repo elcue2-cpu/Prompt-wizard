@@ -528,6 +528,10 @@ a{color:inherit;text-decoration:none}
   .preview-col .empty-title{font-size:12.5px;margin-bottom:3px}
   .preview-col .empty-desc{font-size:11.5px;line-height:1.55;max-width:280px}
   .actions{padding:9px 11px calc(10px + env(safe-area-inset-bottom))}
+  /* 메모 안내와 글자수가 좁은 화면에서 겹치거나 쪼개지지 않게 */
+  .memo-foot{flex-wrap:wrap;row-gap:2px}
+  .memo-foot span:first-child{flex:1 1 100%;white-space:normal;overflow:visible;text-overflow:clip}
+  #memoCount{flex:none;white-space:nowrap}
   .btn{font-size:12.5px;padding:10px 9px}
   .toast{bottom:20px}
 }
